@@ -32,6 +32,9 @@ func (l *Lexer) NextToken() token.Token {
 	switch l.ch {
 	case ',':
 		tok = newToken(token.COMMA, l.ch)
+	case 0:
+		tok.Literal = ""
+		tok.Type = token.EOF
 	default:
 		if isLetter(l.ch) {
 			tok.Literal = l.readInst()

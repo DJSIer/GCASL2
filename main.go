@@ -1,9 +1,20 @@
 package main
 
-import "fmt"
-import "github.com/DJSIer/GCASL2/lexer"
+import (
+	"fmt"
+
+	"github.com/DJSIer/GCASL2/lexer"
+	"github.com/DJSIer/GCASL2/token"
+)
 
 func main() {
-	lex := lexer.New("LD")
-	fmt.Println("Helloworld")
+	lex := lexer.New("LD LDA")
+	for {
+		t := lex.NextToken()
+		fmt.Println(t)
+		if t.Type == token.EOF {
+			break
+		}
+	}
+
 }
