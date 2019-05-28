@@ -1,5 +1,9 @@
 package main
+
 import "fmt"
-func main(){
-    fmt.Println("Helloworld")
+import "GCASL2/lexer"
+
+func main() {
+	lex := lexer.New("LD")
+	fmt.Println("Helloworld")
 }
