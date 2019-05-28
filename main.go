@@ -1,7 +1,7 @@
 package main
 
 import "fmt"
-import "GCASL2/lexer"
+import "github.com/DJSIer/GCASL2/lexer"
 
 func main() {
 	lex := lexer.New("LD")

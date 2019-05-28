@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"GCASL2/token"
+	"github.com/DJSIer/GCASL2/token"
 )
 
 type Lexer struct {
