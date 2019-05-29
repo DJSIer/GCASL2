@@ -8,7 +8,8 @@ import (
 )
 
 func main() {
-	lex := lexer.New(`ADDSUB  START
+	lex := lexer.New(`
+	ADDSUB  START
 	LAD     GR1, 1024
 	LAD     GR2, 2048
 	ADDA    GR1, GR2
@@ -23,6 +24,7 @@ func main() {
 	SUBL    GR6, =300
 	RET
 	END`)
+
 	for {
 		t := lex.NextToken()
 		fmt.Println(t)

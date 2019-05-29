@@ -38,6 +38,12 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Literal = "#" + l.readNumber()
 			tok.Type = token.HEX
 		}
+	case '=':
+		if isDegit(l.peekChar()) {
+			l.readChar()
+			tok.Literal = "=" + l.readNumber()
+			tok.Type = token.INT
+		}
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
