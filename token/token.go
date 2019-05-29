@@ -4,6 +4,7 @@ type TokenType string
 
 const (
 	ILLEGAL   = "ILLEGAL"
+	REGISTER  = "REG"
 	LABEL     = "LABEL"
 	START     = "START"
 	END       = "END"
@@ -14,6 +15,8 @@ const (
 	RPUSH     = "RPUSH"
 	RPOP      = "RPOP"
 	EOF       = "EOF"
+	INT       = "INT"
+	HEX       = "HEX"
 	STRING    = "STRING"
 	SHARP     = "#"
 	COMMA     = ","
@@ -54,6 +57,14 @@ type Token struct {
 }
 
 var keywords = map[string]TokenType{
+	"GR0":   REGISTER,
+	"GR1":   REGISTER,
+	"GR2":   REGISTER,
+	"GR3":   REGISTER,
+	"GR4":   REGISTER,
+	"GR5":   REGISTER,
+	"GR6":   REGISTER,
+	"GR7":   REGISTER,
 	"START": START,
 	"END":   END,
 	"DS":    DS,

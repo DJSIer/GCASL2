@@ -32,6 +32,12 @@ func (l *Lexer) NextToken() token.Token {
 	switch l.ch {
 	case ',':
 		tok = newToken(token.COMMA, l.ch)
+	case '#':
+		if isDegit(l.peekChar()) {
+			l.readChar()
+			tok.Literal = "#" + l.readNumber()
+			tok.Type = token.HEX
+		}
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
@@ -39,6 +45,11 @@ func (l *Lexer) NextToken() token.Token {
 		if isLetter(l.ch) {
 			tok.Literal = l.readInst()
 			tok.Type = token.LookupInst(tok.Literal)
+			return tok
+		} else if isDegit(l.ch) {
+			tok.Literal = l.readNumber()
+			tok.Type = token.INT
+			return tok
 		} else {
 			tok = newToken(token.ILLEGAL, l.ch)
 		}
@@ -53,14 +64,36 @@ func (l *Lexer) skipWhitespace() {
 }
 func (l *Lexer) readInst() string {
 	position := l.position
-	for isLetter(l.ch) {
+	for isLetterDegit(l.ch) {
 		l.readChar()
 	}
 	return l.input[position:l.position]
 }
-func isLetter(ch byte) bool {
-	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
+func (l *Lexer) readNumber() string {
+	position := l.position
+	for isDegit(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
 }
+func (l *Lexer) peekChar() byte {
+	if l.readPosition >= len(l.input) {
+		return 0
+	} else {
+		return l.input[l.readPosition]
+	}
+}
+
+func isDegit(ch byte) bool {
+	return '0' <= ch && ch <= '9'
+}
+func isLetter(ch byte) bool {
+	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z'
+}
+func isLetterDegit(ch byte) bool {
+	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || '0' <= ch && ch <= '9'
+}
+
 func newToken(tokenType token.TokenType, ch byte) token.Token {
 	return token.Token{Type: tokenType, Literal: string(ch)}
 }
