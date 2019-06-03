@@ -1,0 +1,94 @@
+package parser
+
+import (
+	"fmt"
+	"strconv"
+
+	"github.com/DJSIer/GCASL2/lexer"
+	"github.com/DJSIer/GCASL2/opcode"
+	"github.com/DJSIer/GCASL2/token"
+)
+
+var regsterNumber = map[string]uint8{
+	"GR0": 0x00,
+	"GR1": 0x01,
+	"GR2": 0x02,
+	"GR3": 0x03,
+	"GR4": 0x04,
+	"GR5": 0x05,
+	"GR6": 0x06,
+	"GR7": 0x07,
+}
+
+type Parser struct {
+	l         *lexer.Lexer
+	curToken  token.Token
+	peekToken token.Token
+	errors    []string
+}
+
+func New(l *lexer.Lexer) *Parser {
+	p := &Parser{
+		l:      l,
+		errors: []string{},
+	}
+	p.nextToken()
+	p.nextToken()
+	return p
+}
+func (p *Parser) nextToken() {
+	p.curToken = p.peekToken
+	p.peekToken = p.l.NextToken()
+}
+func (p *Parser) curTokenIs(t token.TokenType) bool {
+	return p.curToken.Type == t
+}
+
+func (p *Parser) peekTokenIs(t token.TokenType) bool {
+	return p.peekToken.Type == t
+}
+func (p *Parser) expectPeek(t token.TokenType) bool {
+	if p.peekTokenIs(t) {
+		p.nextToken()
+		return true
+	} else {
+		p.peekError(t)
+		return false
+	}
+}
+func (p *Parser) peekError(t token.TokenType) {
+	msg := fmt.Sprintf("expected next token to be %s, got %s instead",
+		t, p.peekToken.Type)
+	p.errors = append(p.errors, msg)
+}
+func (p *Parser) ParseProgram() []opcode.Opcode {
+	Excode := []opcode.Opcode{}
+	code := &opcode.Opcode{}
+	switch p.curToken.Type {
+	case token.LAD:
+		code = p.LDAStatment()
+	}
+	if code != nil {
+		Excode = append(Excode, *code)
+	}
+	return Excode
+}
+func (p *Parser) LDAStatment() *opcode.Opcode {
+	code := &opcode.Opcode{Code: 0x1200, Op: 0x12, Length: 2}
+	if !p.expectPeek(token.REGISTER) {
+		return nil
+	}
+	code.Code |= uint16(regsterNumber[p.curToken.Literal]) << 4
+	p.nextToken()
+	if !p.expectPeek(token.INT) {
+		return nil
+	}
+	addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+	if err != nil {
+		msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	code.Addr = uint16(addr)
+	return code
+}

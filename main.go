@@ -17,7 +17,7 @@ func main() {
 	LAD     GR3, #1000
 	LAD     GR4, #2000
 	ADDL    GR3, GR4
-
+	
 	LAD     GR5, 200
 	LAD     GR6, 100
 	SUBA    GR5, GR6
