@@ -90,5 +90,10 @@ func (p *Parser) LDAStatment() *opcode.Opcode {
 		return nil
 	}
 	code.Addr = uint16(addr)
+	p.nextToken()
+	if !p.expectPeek(token.REGISTER) {
+		return code
+	}
+	code.Code |= uint16(regsterNumber[p.curToken.Literal])
 	return code
 }

@@ -15,6 +15,7 @@ func TestLDAStatment(t *testing.T) {
 	}{
 		{"LAD GR1,0", 0x12, 0x1210, 0x0000},
 		{"LAD GR3,65535", 0x12, 0x1230, 0xFFFF},
+		{"LAD GR1,0,GR3", 0x12, 0x1213, 0x0000},
 	}
 
 	for _, tt := range tests {
@@ -26,10 +27,10 @@ func TestLDAStatment(t *testing.T) {
 			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
 		}
 		if op.Code != tt.expectedCode {
-			t.Fatalf("code : 0x%04x Now : 0x%04x", tt.expectedCode, op.Addr)
+			t.Fatalf("code : 0x%04x Now : 0x%04x", tt.expectedCode, op.Code)
 		}
 		if op.Addr != tt.expectedAddr {
-			t.Fatalf("Addr : 0x%04x Now : 0x%04x", tt.expectedCode, op.Addr)
+			t.Fatalf("Addr : 0x%04x Now : 0x%04x", tt.expectedAddr, op.Addr)
 		}
 	}
 }
