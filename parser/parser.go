@@ -9,7 +9,7 @@ import (
 	"github.com/DJSIer/GCASL2/token"
 )
 
-var regsterNumber = map[string]uint8{
+var registerNumber = map[string]uint8{
 	"GR0": 0x00,
 	"GR1": 0x01,
 	"GR2": 0x02,
@@ -67,18 +67,59 @@ func (p *Parser) ParseProgram() []opcode.Opcode {
 	switch p.curToken.Type {
 	case token.LAD:
 		code = p.LDAStatment()
+	case token.LD:
+		code = p.LDStatment()
 	}
 	if code != nil {
 		Excode = append(Excode, *code)
 	}
 	return Excode
 }
+func (p *Parser) LDStatment() *opcode.Opcode {
+	code := &opcode.Opcode{}
+	if !p.expectPeek(token.REGISTER) {
+		return nil
+	}
+	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
+	p.nextToken()
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) {
+		return nil
+	}
+	p.nextToken()
+	switch p.curToken.Type {
+	case token.INT:
+		code.Op = 0x10
+		code.Length = 2
+		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		if err != nil {
+			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+			p.errors = append(p.errors, msg)
+			return nil
+		}
+		code.Addr = uint16(addr)
+		p.nextToken()
+		if !p.expectPeek(token.REGISTER) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.REGISTER:
+		code.Op = 0x14
+		code.Length = 1
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	default:
+		code.Op = 0xFF
+	}
+	code.Code |= uint16(code.Op) << 8
+
+	return code
+}
 func (p *Parser) LDAStatment() *opcode.Opcode {
 	code := &opcode.Opcode{Code: 0x1200, Op: 0x12, Length: 2}
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
-	code.Code |= uint16(regsterNumber[p.curToken.Literal]) << 4
+	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
 	p.nextToken()
 	if !p.expectPeek(token.INT) {
 		return nil
@@ -94,6 +135,6 @@ func (p *Parser) LDAStatment() *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
 		return code
 	}
-	code.Code |= uint16(regsterNumber[p.curToken.Literal])
+	code.Code |= uint16(registerNumber[p.curToken.Literal])
 	return code
 }
