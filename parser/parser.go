@@ -63,15 +63,18 @@ func (p *Parser) peekError(t token.TokenType) {
 }
 func (p *Parser) ParseProgram() []opcode.Opcode {
 	Excode := []opcode.Opcode{}
-	code := &opcode.Opcode{}
-	switch p.curToken.Type {
-	case token.LAD:
-		code = p.LDAStatment()
-	case token.LD:
-		code = p.LDStatment()
-	}
-	if code != nil {
-		Excode = append(Excode, *code)
+	for !p.curTokenIs(token.EOF) {
+		code := &opcode.Opcode{}
+		switch p.curToken.Type {
+		case token.LAD:
+			code = p.LADStatment()
+		case token.LD:
+			code = p.LDStatment()
+		}
+		if code != nil {
+			Excode = append(Excode, *code)
+		}
+		p.nextToken()
 	}
 	return Excode
 }
@@ -97,11 +100,12 @@ func (p *Parser) LDStatment() *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-		p.nextToken()
-		if !p.expectPeek(token.REGISTER) {
+
+		if !p.expectPeek(token.COMMA) {
 			code.Code |= uint16(code.Op) << 8
 			return code
 		}
+		p.nextToken()
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.REGISTER:
 		code.Op = 0x14
@@ -114,7 +118,7 @@ func (p *Parser) LDStatment() *opcode.Opcode {
 
 	return code
 }
-func (p *Parser) LDAStatment() *opcode.Opcode {
+func (p *Parser) LADStatment() *opcode.Opcode {
 	code := &opcode.Opcode{Code: 0x1200, Op: 0x12, Length: 2}
 	if !p.expectPeek(token.REGISTER) {
 		return nil
@@ -131,10 +135,17 @@ func (p *Parser) LDAStatment() *opcode.Opcode {
 		return nil
 	}
 	code.Addr = uint16(addr)
-	p.nextToken()
-	if !p.expectPeek(token.REGISTER) {
+	if !p.expectPeek(token.COMMA) {
 		return code
 	}
+	p.nextToken()
 	code.Code |= uint16(registerNumber[p.curToken.Literal])
+	return code
+}
+func (p *Parser) STStatment() *opcode.Opcode {
+	code := &opcode.Opcode{Code: 0x1100, Op: 0x11, Length: 2}
+	if !p.expectPeek(token.REGISTER) {
+		return nil
+	}
 	return code
 }
