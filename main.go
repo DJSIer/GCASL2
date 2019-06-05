@@ -9,7 +9,7 @@ import (
 
 func main() {
 	lex := lexer.New(`
-	LD GR2,0 
+	RAMEN LD GR2,0 
 	LAD GR2,0`)
 
 	for {
