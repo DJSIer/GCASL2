@@ -330,3 +330,30 @@ func TestCPAStatment(t *testing.T) {
 		}
 	}
 }
+func TestCPLStatment(t *testing.T) {
+	tests := []struct {
+		input        string
+		expectedOp   uint8
+		expectedCode uint16
+		expectedAddr uint16
+	}{
+		{"CPL GR2,0", 0x41, 0x4120, 0x0000},
+		{"CPL GR1,0,GR3", 0x41, 0x4113, 0x0000},
+		{"CPL GR7,GR7", 0x45, 0x4577, 0x0000},
+	}
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		opcode := p.ParseProgram()
+		op := opcode[0]
+		if op.Op != tt.expectedOp {
+			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
+		}
+		if op.Code != tt.expectedCode {
+			t.Fatalf("code : 0x%04x Now : 0x%04x", tt.expectedCode, op.Code)
+		}
+		if op.Addr != tt.expectedAddr {
+			t.Fatalf("Addr : 0x%04x Now : 0x%04x", tt.expectedAddr, op.Addr)
+		}
+	}
+}
