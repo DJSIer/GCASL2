@@ -46,6 +46,8 @@ func New(l *lexer.Lexer) *Parser {
 		token.ADDL: p.ADDLStatment,
 		token.SUBL: p.SUBLStatment,
 		token.AND:  p.ANDStatment,
+		token.OR:   p.ORStatment,
+		token.XOR:  p.XORStatment,
 	}
 	p.symbolTable = symbol.NewSymbolTable()
 	p.nextToken()
@@ -111,6 +113,10 @@ func (p *Parser) ParseProgram() []opcode.Opcode {
 		case token.SUBL:
 			code = p.instSet[p.curToken.Type](code)
 		case token.AND:
+			code = p.instSet[p.curToken.Type](code)
+		case token.OR:
+			code = p.instSet[p.curToken.Type](code)
+		case token.XOR:
 			code = p.instSet[p.curToken.Type](code)
 		}
 		if code != nil {
@@ -446,7 +452,7 @@ func (p *Parser) ORStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	switch p.curToken.Type {
 	case token.INT:
-		code.Op = 0x30
+		code.Op = 0x31
 		code.Length = 2
 		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
@@ -464,7 +470,49 @@ func (p *Parser) ORStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.nextToken()
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.REGISTER:
-		code.Op = 0x34
+		code.Op = 0x35
+		code.Length = 1
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	default:
+		code.Op = 0xFF
+	}
+	code.Code |= uint16(code.Op) << 8
+
+	return code
+}
+func (p *Parser) XORStatment(code *opcode.Opcode) *opcode.Opcode {
+
+	if !p.expectPeek(token.REGISTER) {
+		return nil
+	}
+	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
+	p.nextToken()
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) {
+		return nil
+	}
+	p.nextToken()
+
+	switch p.curToken.Type {
+	case token.INT:
+		code.Op = 0x32
+		code.Length = 2
+		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		if err != nil {
+			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+			p.errors = append(p.errors, msg)
+			return nil
+		}
+		code.Addr = uint16(addr)
+
+		if !p.peekTokenIs(token.COMMA) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		p.nextToken()
+		p.nextToken()
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.REGISTER:
+		code.Op = 0x36
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	default:
