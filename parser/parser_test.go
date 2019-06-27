@@ -256,9 +256,36 @@ func TestORStatment(t *testing.T) {
 		expectedCode uint16
 		expectedAddr uint16
 	}{
-		{"OR GR2,0", 0x31, 0x3020, 0x0000},
-		{"OR GR1,0,GR3", 0x31, 0x3013, 0x0000},
-		{"OR GR7,GR7", 0x35, 0x3477, 0x0000},
+		{"OR GR2,0", 0x31, 0x3120, 0x0000},
+		{"OR GR1,0,GR3", 0x31, 0x3113, 0x0000},
+		{"OR GR7,GR7", 0x35, 0x3577, 0x0000},
+	}
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		opcode := p.ParseProgram()
+		op := opcode[0]
+		if op.Op != tt.expectedOp {
+			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
+		}
+		if op.Code != tt.expectedCode {
+			t.Fatalf("code : 0x%04x Now : 0x%04x", tt.expectedCode, op.Code)
+		}
+		if op.Addr != tt.expectedAddr {
+			t.Fatalf("Addr : 0x%04x Now : 0x%04x", tt.expectedAddr, op.Addr)
+		}
+	}
+}
+func TestXORStatment(t *testing.T) {
+	tests := []struct {
+		input        string
+		expectedOp   uint8
+		expectedCode uint16
+		expectedAddr uint16
+	}{
+		{"XOR GR2,0", 0x32, 0x3220, 0x0000},
+		{"XOR GR1,0,GR3", 0x32, 0x3213, 0x0000},
+		{"XOR GR7,GR7", 0x36, 0x3677, 0x0000},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
