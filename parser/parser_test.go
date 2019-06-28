@@ -465,3 +465,28 @@ func TestSRLStatment(t *testing.T) {
 		}
 	}
 }
+func TestJMIStatment(t *testing.T) {
+	tests := []struct {
+		input        string
+		expectedOp   uint8
+		expectedCode uint16
+		expectedAddr uint16
+	}{
+		{"JMI 1000, GR3", 0x61, 0x6103, 0x03e8},
+	}
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		opcode := p.ParseProgram()
+		op := opcode[0]
+		if op.Op != tt.expectedOp {
+			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
+		}
+		if op.Addr != tt.expectedAddr {
+			t.Fatalf("Addr : 0x%04x Now : 0x%04x", tt.expectedAddr, op.Addr)
+		}
+		if op.Code != tt.expectedCode {
+			t.Fatalf("code : 0x%04x Now : 0x%04x", tt.expectedCode, op.Code)
+		}
+	}
+}
