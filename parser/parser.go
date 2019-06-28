@@ -50,6 +50,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.XOR:  p.XORStatment,
 		token.CPA:  p.CPAStatment,
 		token.CPL:  p.CPLStatment,
+		token.SLA:  p.SLAStatment,
 	}
 	p.symbolTable = symbol.NewSymbolTable()
 	p.nextToken()
@@ -123,6 +124,8 @@ func (p *Parser) ParseProgram() []opcode.Opcode {
 		case token.CPA:
 			code = p.instSet[p.curToken.Type](code)
 		case token.CPL:
+			code = p.instSet[p.curToken.Type](code)
+		case token.SLA:
 			code = p.instSet[p.curToken.Type](code)
 		}
 		if code != nil {
@@ -572,6 +575,8 @@ func (p *Parser) CPAStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	return code
 }
+
+//compare logical
 func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
@@ -612,5 +617,40 @@ func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	code.Code |= uint16(code.Op) << 8
 
+	return code
+}
+func (p *Parser) SLAStatment(code *opcode.Opcode) *opcode.Opcode {
+	if !p.expectPeek(token.REGISTER) {
+		return nil
+	}
+	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
+	p.nextToken()
+	if !p.peekTokenIs(token.INT) {
+		return nil
+	}
+	p.nextToken()
+	switch p.curToken.Type {
+	case token.INT:
+		code.Op = 0x50
+		code.Length = 2
+		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		if err != nil {
+			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+			p.errors = append(p.errors, msg)
+			return nil
+		}
+		code.Addr = uint16(addr)
+
+		if !p.peekTokenIs(token.COMMA) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		p.nextToken()
+		p.nextToken()
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	default:
+		code.Op = 0xFF
+	}
+	code.Code |= uint16(code.Op) << 8
 	return code
 }
