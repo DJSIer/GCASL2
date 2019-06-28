@@ -438,3 +438,30 @@ func TestSLLStatment(t *testing.T) {
 		}
 	}
 }
+func TestSRLStatment(t *testing.T) {
+	tests := []struct {
+		input        string
+		expectedOp   uint8
+		expectedCode uint16
+		expectedAddr uint16
+	}{
+		{"SRL GR2,1000", 0x53, 0x5320, 0x03e8},
+		{"SRL GR1,0,GR3", 0x53, 0x5313, 0x0000},
+		{"SRL GR7,GR7", 0x00, 0x000, 0x0000},
+	}
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		opcode := p.ParseProgram()
+		op := opcode[0]
+		if op.Op != tt.expectedOp {
+			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
+		}
+		if op.Code != tt.expectedCode {
+			t.Fatalf("code : 0x%04x Now : 0x%04x", tt.expectedCode, op.Code)
+		}
+		if op.Addr != tt.expectedAddr {
+			t.Fatalf("Addr : 0x%04x Now : 0x%04x", tt.expectedAddr, op.Addr)
+		}
+	}
+}
