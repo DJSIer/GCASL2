@@ -9,8 +9,8 @@ import (
 
 func main() {
 	lex := lexer.New(`
-	RAMEN LD GR2,0 
-	LAD GR2,0`)
+	JMI 0000, GR1
+	`)
 
 	for {
 		t := lex.NextToken()
