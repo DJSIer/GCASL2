@@ -628,6 +628,8 @@ func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	return code
 }
+
+//shift left arithmetic
 func (p *Parser) SLAStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
 		return nil
@@ -663,6 +665,8 @@ func (p *Parser) SLAStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Code |= uint16(code.Op) << 8
 	return code
 }
+
+//shift right arithmetic
 func (p *Parser) SRAStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
 		return nil
@@ -698,6 +702,8 @@ func (p *Parser) SRAStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Code |= uint16(code.Op) << 8
 	return code
 }
+
+//shift left logical
 func (p *Parser) SLLStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
 		return nil
@@ -733,6 +739,8 @@ func (p *Parser) SLLStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Code |= uint16(code.Op) << 8
 	return code
 }
+
+//shift right logical
 func (p *Parser) SRLStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
 		return nil
