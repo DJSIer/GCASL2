@@ -87,6 +87,7 @@ var keywords = map[string]TokenType{
 	"CPL":   CPL,
 	"SLA":   SLA,
 	"SRA":   SRA,
+	"SLL":   SLL,
 	"JPL":   JPL,
 	"JMI":   JMI,
 	"JNZ":   JNZ,
