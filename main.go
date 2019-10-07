@@ -13,7 +13,7 @@ func main() {
 		LD GR1,GR2
 		LAD GR1,0,GR2
 		LD	GR1,GO
-	GO	RET
+		RET
 	`)
 	p := parser.New(lex)
 	fmt.Println(p.ParseProgram())
