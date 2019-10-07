@@ -4,6 +4,7 @@ import (
 	"github.com/DJSIer/GCASL2/token"
 )
 
+// Lexer CASL2Lexer
 type Lexer struct {
 	input        string
 	position     int
@@ -11,6 +12,7 @@ type Lexer struct {
 	ch           byte
 }
 
+// New CASL2Lexer init
 func New(input string) *Lexer {
 	l := &Lexer{input: input}
 	l.readChar()
@@ -26,6 +28,8 @@ func (l *Lexer) readChar() {
 	l.position = l.readPosition
 	l.readPosition++
 }
+
+// NextToken Token
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 	l.skipWhitespace()

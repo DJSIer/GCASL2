@@ -32,29 +32,32 @@ type Parser struct {
 	instSet     map[token.TokenType]functype
 }
 
+// New Parser New
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{
 		l:      l,
 		errors: []string{},
 	}
 	p.instSet = map[token.TokenType]functype{
-		token.LD:   p.LDStatment,
-		token.LAD:  p.LADStatment,
-		token.ST:   p.STStatment,
-		token.ADDA: p.ADDAStatment,
-		token.SUBA: p.SUBAStatment,
-		token.ADDL: p.ADDLStatment,
-		token.SUBL: p.SUBLStatment,
-		token.AND:  p.ANDStatment,
-		token.OR:   p.ORStatment,
-		token.XOR:  p.XORStatment,
-		token.CPA:  p.CPAStatment,
-		token.CPL:  p.CPLStatment,
-		token.SLA:  p.SLAStatment,
-		token.SRA:  p.SRAStatment,
-		token.SLL:  p.SLLStatment,
-		token.SRL:  p.SRLStatment,
-		token.JMI:  p.JMIStatment,
+		token.LD:    p.LDStatment,
+		token.LAD:   p.LADStatment,
+		token.ST:    p.STStatment,
+		token.ADDA:  p.ADDAStatment,
+		token.SUBA:  p.SUBAStatment,
+		token.ADDL:  p.ADDLStatment,
+		token.SUBL:  p.SUBLStatment,
+		token.AND:   p.ANDStatment,
+		token.OR:    p.ORStatment,
+		token.XOR:   p.XORStatment,
+		token.CPA:   p.CPAStatment,
+		token.CPL:   p.CPLStatment,
+		token.SLA:   p.SLAStatment,
+		token.SRA:   p.SRAStatment,
+		token.SLL:   p.SLLStatment,
+		token.SRL:   p.SRLStatment,
+		token.JMI:   p.JMIStatment,
+		token.START: p.STARTStatment,
+		token.RET:   p.RETStatment,
 	}
 	p.symbolTable = symbol.NewSymbolTable()
 	p.nextToken()
@@ -81,6 +84,7 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
 		return false
 	}
 }
+
 func (p *Parser) Errors() []string {
 	return p.errors
 }
@@ -89,6 +93,8 @@ func (p *Parser) peekError(t token.TokenType) {
 		t, p.peekToken.Type)
 	p.errors = append(p.errors, msg)
 }
+
+// ParseProgram CASL2 Parse
 func (p *Parser) ParseProgram() []opcode.Opcode {
 	Excode := []opcode.Opcode{}
 	for !p.curTokenIs(token.EOF) {
@@ -104,6 +110,7 @@ func (p *Parser) ParseProgram() []opcode.Opcode {
 			}
 			p.nextToken()
 		}
+
 		switch p.curToken.Type {
 		case token.LAD:
 			code = p.instSet[p.curToken.Type](code)
@@ -139,6 +146,12 @@ func (p *Parser) ParseProgram() []opcode.Opcode {
 			code = p.instSet[p.curToken.Type](code)
 		case token.JMI:
 			code = p.instSet[p.curToken.Type](code)
+		case token.START:
+			code = p.instSet[p.curToken.Type](code)
+		case token.RET:
+			code = p.instSet[p.curToken.Type](code)
+		default:
+			code = nil
 		}
 		if code != nil {
 			Excode = append(Excode, *code)
@@ -148,6 +161,23 @@ func (p *Parser) ParseProgram() []opcode.Opcode {
 	}
 	return Excode
 }
+
+func (p *Parser) STARTStatment(code *opcode.Opcode) *opcode.Opcode {
+	sy, ok := p.symbolTable.Resolve(code.Label.Label)
+	if !ok {
+		msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Label: sy}
+	return code
+}
+func (p *Parser) RETStatment(code *opcode.Opcode) *opcode.Opcode {
+	code = &opcode.Opcode{Op: 0x81, Code: 0x8100, Length: 1, Label: code.Label}
+	return code
+}
+
+// LDStatment LDStatment
 func (p *Parser) LDStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
 		return nil
@@ -194,7 +224,6 @@ func (p *Parser) LADStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
-
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
 	p.nextToken()
 
@@ -290,6 +319,7 @@ func (p *Parser) ADDAStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	return code
 }
+
 func (p *Parser) SUBAStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
@@ -780,10 +810,10 @@ func (p *Parser) SRLStatment(code *opcode.Opcode) *opcode.Opcode {
 	return code
 }
 
+// JMIStatment JMI
 func (p *Parser) JMIStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Op = 0x61
 	code.Length = 2
-
 	if !p.expectPeek(token.INT) {
 		return nil
 	}
