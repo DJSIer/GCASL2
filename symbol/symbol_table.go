@@ -24,3 +24,11 @@ func (s *SymbolTable) Define(label string, addr uint16) (Symbol, bool) {
 	s.numDefinitions++
 	return symbol, true
 }
+
+func (s *SymbolTable) Resolve(name string) (Symbol, bool) {
+	obj, ok := s.store[name]
+	if !ok {
+		return obj, ok
+	}
+	return obj, ok
+}
