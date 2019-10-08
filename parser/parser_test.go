@@ -64,9 +64,8 @@ func TestLDStatment(t *testing.T) {
 		expectedCode uint16
 		expectedAddr uint16
 	}{
-		{"LD GR2,0", 0x10, 0x1020, 0x0000},
-		{"LD GR2,GR3", 0x14, 0x1423, 0x0000},
-		{"LD GR1,0,GR3", 0x10, 0x1013, 0x0000},
+		{"LD GR2,GO", 0x10, 0x1020, 0x0000},
+		{"LD GR2,1234", 0x10, 0x1020, 0x04d2},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
