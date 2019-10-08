@@ -10,6 +10,7 @@ GCASL2 is CASL2 Assembly written in Golang
 - [x] `LD r,addr`
 - [x] `LD r,LABEL`
 - [x] `LD r,addr,x`
+
 ###LAD
 - [ ] `LAD r,addr`
 - [ ] `LAD r,LABEL`
