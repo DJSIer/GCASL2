@@ -23,10 +23,10 @@ GCASL2 is CASL2 compiler to COMET II
 - [ ] `ST r,addr,x`
 
  ### ADDA
-- [] `ADDA r1,r2`
-- [] `ADDA r,addr`
-- [] `ADDA r,LABEL`
-- [] `ADDA r,addr,x`
+- [ ] `ADDA r1,r2`
+- [ ] `ADDA r,addr`
+- [ ] `ADDA r,LABEL`
+- [ ] `ADDA r,addr,x`
 
  ### ADDL
  ### SUBA
