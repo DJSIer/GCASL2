@@ -2,14 +2,19 @@ package opcode
 
 import "github.com/DJSIer/GCASL2/symbol"
 
+// Opcode CASL2 Opcode struct
 type Opcode struct {
-	Code   uint16
-	Addr   uint16
-	Op     uint8
-	Length int
-	Label  symbol.Symbol
+	Code      uint16        //2byte
+	Addr      uint16        //Address
+	AddrLabel string        //Address Label
+	Op        uint8         //1byte
+	Length    int           //Opcode Length
+	Label     symbol.Symbol //Label
 }
 
-func (op *Opcode) GetAddr() uint16 {
-	return op.Code
+func New() *Opcode {
+	o := &Opcode{
+		Addr: 0xFFFF,
+	}
+	return o
 }

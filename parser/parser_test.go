@@ -36,8 +36,9 @@ func TestLDAStatment(t *testing.T) {
 		expectedAddr uint16
 	}{
 		{"RAMEN LAD GR1,0", 0x12, 0x1210, 0x0000},
-		{"LAD GR3,65535", 0x12, 0x1230, 0xFFFF},
+		{"LAD GR3,131070", 0x12, 0x1230, 0xFFFF},
 		{"LAD GR1,0,GR3", 0x12, 0x1213, 0x0000},
+		{"LAD GR1,GO,GR3", 0x12, 0x1213, 0x0000},
 	}
 
 	for _, tt := range tests {
@@ -64,9 +65,8 @@ func TestLDStatment(t *testing.T) {
 		expectedCode uint16
 		expectedAddr uint16
 	}{
-		{"LD GR2,0", 0x10, 0x1020, 0x0000},
-		{"LD GR2,GR3", 0x14, 0x1423, 0x0000},
-		{"LD GR1,0,GR3", 0x10, 0x1013, 0x0000},
+		{"LD GR2,GO", 0x10, 0x1020, 0x0000},
+		{"LD GR2,1234", 0x10, 0x1020, 0x04d2},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
