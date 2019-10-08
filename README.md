@@ -2,7 +2,7 @@
 
 ## What is GCASL2?
 
-GCASL2 is CASL2 Assembly written in Golang
+GCASL2 is CASL2 compiler to COMET II
 
 ## 実装状況
 
