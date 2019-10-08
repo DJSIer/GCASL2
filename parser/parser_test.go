@@ -36,8 +36,9 @@ func TestLDAStatment(t *testing.T) {
 		expectedAddr uint16
 	}{
 		{"RAMEN LAD GR1,0", 0x12, 0x1210, 0x0000},
-		{"LAD GR3,65535", 0x12, 0x1230, 0xFFFF},
+		{"LAD GR3,131070", 0x12, 0x1230, 0xFFFF},
 		{"LAD GR1,0,GR3", 0x12, 0x1213, 0x0000},
+		{"LAD GR1,GO,GR3", 0x12, 0x1213, 0x0000},
 	}
 
 	for _, tt := range tests {

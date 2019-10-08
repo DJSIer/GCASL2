@@ -10,9 +10,7 @@ import (
 func main() {
 	lex := lexer.New(`
 	PRG START
-		GO LAD	GR1,GO
-		GO LAD	GR1,GO
-		RET
+		GO ADDA GR3,GO,GR6
 	`)
 	p := parser.New(lex)
 	fmt.Println(p.ParseProgram())
