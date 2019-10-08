@@ -275,6 +275,9 @@ func (p *Parser) LADStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	return code
 }
+
+// STStatment Store Parser
+// ST r,adr [,x];実行アドレス ← (r)
 func (p *Parser) STStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Code: 0x1100, Op: 0x11, Length: 2, Label: code.Label}
 
