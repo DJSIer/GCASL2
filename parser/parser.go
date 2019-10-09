@@ -452,22 +452,36 @@ func (p *Parser) SUBAStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	return code
 }
+
+// ADDLStatment ADD logical Parser
+// ADDL r1, r2		; r1  ← (r1) + (r2)
+// ADDL r, adr [,x]	; r   ← (r)  + 実行アドレス
 func (p *Parser) ADDLStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
+	// Next Token is ','
+	if !p.peekTokenIs(token.COMMA) {
+		msg := "no ,"
+		p.errors = append(p.errors, msg)
+		return nil
+	}
 	p.nextToken()
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) {
+	// Next Token is 'INT' or register or Label
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+		p.errors = append(p.errors, msg)
 		return nil
 	}
 	p.nextToken()
 
+	code.Op = 0x22
+	code.Length = 2
+
 	switch p.curToken.Type {
 	case token.INT:
-		code.Op = 0x22
-		code.Length = 2
 		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
 			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
@@ -486,6 +500,15 @@ func (p *Parser) ADDLStatment(code *opcode.Opcode) *opcode.Opcode {
 	case token.REGISTER:
 		code.Op = 0x26
 		code.Length = 1
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+		if !p.peekTokenIs(token.COMMA) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		p.nextToken()
+		p.nextToken()
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	default:
 		code.Op = 0xFF
