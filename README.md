@@ -34,81 +34,81 @@ load address
 
  ### ADDL
  add logical
-- [ ] `ADDL r1,r2`
-- [ ] `ADDL r,addr`
-- [ ] `ADDL r,LABEL`
-- [ ] `ADDL r,addr,x`
+- [x] `ADDL r1,r2`
+- [x] `ADDL r,addr`
+- [x] `ADDL r,LABEL`
+- [x] `ADDL r,addr,x`
 
  ### SUBA
  subtract arithmetic
-- [ ] `SUBA r1,r2`
-- [ ] `SUBA r,addr`
-- [ ] `SUBA r,LABEL`
-- [ ] `SUBA r,addr,x`
+- [x] `SUBA r1,r2`
+- [x] `SUBA r,addr`
+- [x] `SUBA r,LABEL`
+- [x] `SUBA r,addr,x`
 
  ### SUBL
  substract logical
-- [ ] `SUBL r1,r2`
-- [ ] `SUBL r,addr`
-- [ ] `SUBL r,LABEL`
-- [ ] `SUBL r,addr,x`
+- [x] `SUBL r1,r2`
+- [x] `SUBL r,addr`
+- [x] `SUBL r,LABEL`
+- [x] `SUBL r,addr,x`
 
  ### AND
-- [ ] `AND r1,r2`
-- [ ] `AND r,addr`
-- [ ] `AND r,LABEL`
-- [ ] `AND r,addr,x`
+- [x] `AND r1,r2`
+- [x] `AND r,addr`
+- [x] `AND r,LABEL`
+- [x] `AND r,addr,x`
 
  ### OR
-- [ ] `OR r1,r2`
-- [ ] `OR r,addr`
-- [ ] `OR r,LABEL`
-- [ ] `OR r,addr,x`
+- [x] `OR r1,r2`
+- [x] `OR r,addr`
+- [x] `OR r,LABEL`
+- [x] `OR r,addr,x`
 
  ### XOR
  exclusive or
-- [ ] `XOR r1,r2`
-- [ ] `XOR r,addr`
-- [ ] `XOR r,LABEL`
-- [ ] `XOR r,addr,x`
+- [x] `XOR r1,r2`
+- [x] `XOR r,addr`
+- [x] `XOR r,LABEL`
+- [x] `XOR r,addr,x`
 
 ### CPA
 compare arithmetic
-- [ ] `CPA r1,r2`
-- [ ] `CPA r,addr`
-- [ ] `CPA r,LABEL`
-- [ ] `CPA r,addr,x`
+- [x] `CPA r1,r2`
+- [x] `CPA r,addr`
+- [x] `CPA r,LABEL`
+- [x] `CPA r,addr,x`
 
 ### CPL
 compare logical
-- [ ] `CPL r1,r2`
-- [ ] `CPL r,addr`
-- [ ] `CPL r,LABEL`
-- [ ] `CPL r,addr,x`
+- [x] `CPL r1,r2`
+- [x] `CPL r,addr`
+- [x] `CPL r,LABEL`
+- [x] `CPL r,addr,x`
 
 ### SLA
 shift left arithmetic
-- [ ] `SLA r,addr`
-- [ ] `SLA r,LABEL`
-- [ ] `SLA r,addr,x`
+- [x] `SLA r,addr`
+- [x] `SLA r,LABEL`
+- [x] `SLA r,addr,x`
 
 ### SRA
 shift right arithmetic
-- [ ] `SRA r,addr`
-- [ ] `SRA r,LABEL`
-- [ ] `SRA r,addr,x`
+- [x] `SRA r,addr`
+- [x] `SRA r,LABEL`
+- [x] `SRA r,addr,x`
 
 ### SLL
 shift left logical
-- [ ] `SLL r,addr`
-- [ ] `SLL r,LABEL`
-- [ ] `SLL r,addr,x`
+- [x] `SLL r,addr`
+- [x] `SLL r,LABEL`
+- [x] `SLL r,addr,x`
 
 ### SRL
 shift right logical
-- [ ] `SRL r,addr`
-- [ ] `SRL r,LABEL`
-- [ ] `SRL r,addr,x`
+- [x] `SRL r,addr`
+- [x] `SRL r,LABEL`
+- [x] `SRL r,addr,x`
 
 ### JMI
 jump on minus

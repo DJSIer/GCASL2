@@ -155,6 +155,7 @@ func (p *Parser) ParseProgram() []opcode.Opcode {
 		case token.RET:
 			code = p.instSet[p.curToken.Type](code)
 		default:
+			p.errors = append(p.errors, "Parse Error : '"+p.curToken.Literal+"'\n")
 			code = nil
 		}
 		if code != nil {
@@ -346,7 +347,7 @@ func (p *Parser) STStatment(code *opcode.Opcode) *opcode.Opcode {
 
 // ADDAStatment ADD Arithmetic Parser
 // ADDA r1, r2		; r1  ← (r1) + (r2)
-// ADDA r, adr [,x]	; r   ← (r)  + 実行アドレス
+// ADDA r, adr [,x]	; r   ← (r)  + (実行アドレス)
 func (p *Parser) ADDAStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
@@ -410,22 +411,34 @@ func (p *Parser) ADDAStatment(code *opcode.Opcode) *opcode.Opcode {
 	return code
 }
 
+// SUBAStatment  subtract arithmetic Parser
+// SUBA r1, r2		; r1  ← (r1) - (r2)
+// SUBA r, adr [,x]	; r   ← (r)  - (実行アドレス)
 func (p *Parser) SUBAStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
-	p.nextToken()
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) {
+	// Next Token is ','
+	if !p.peekTokenIs(token.COMMA) {
+		msg := "no ,"
+		p.errors = append(p.errors, msg)
 		return nil
 	}
 	p.nextToken()
+	// Next Token is 'INT' or register or Label
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	code.Op = 0x21
+	code.Length = 2
 
 	switch p.curToken.Type {
 	case token.INT:
-		code.Op = 0x21
-		code.Length = 2
 		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
 			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
@@ -445,6 +458,15 @@ func (p *Parser) SUBAStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x25
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+		if !p.peekTokenIs(token.COMMA) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		p.nextToken()
+		p.nextToken()
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	default:
 		code.Op = 0xFF
 	}
@@ -452,22 +474,36 @@ func (p *Parser) SUBAStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	return code
 }
+
+// ADDLStatment ADD logical Parser
+// ADDL r1, r2		; r1  ← (r1) + (r2)
+// ADDL r, adr [,x]	; r   ← (r)  + (実行アドレス)
 func (p *Parser) ADDLStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
+	// Next Token is ','
+	if !p.peekTokenIs(token.COMMA) {
+		msg := "no ,"
+		p.errors = append(p.errors, msg)
+		return nil
+	}
 	p.nextToken()
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) {
+	// Next Token is 'INT' or register or Label
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+		p.errors = append(p.errors, msg)
 		return nil
 	}
 	p.nextToken()
 
+	code.Op = 0x22
+	code.Length = 2
+
 	switch p.curToken.Type {
 	case token.INT:
-		code.Op = 0x22
-		code.Length = 2
 		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
 			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
@@ -487,6 +523,15 @@ func (p *Parser) ADDLStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x26
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+		if !p.peekTokenIs(token.COMMA) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		p.nextToken()
+		p.nextToken()
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	default:
 		code.Op = 0xFF
 	}
@@ -494,22 +539,36 @@ func (p *Parser) ADDLStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	return code
 }
+
+// SUBLStatment  subtract logical Parser
+// SUBL r1, r2		; r1  ← (r1) - (r2)
+// SUBL r, adr [,x]	; r   ← (r)  - (実行アドレス)
 func (p *Parser) SUBLStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
+	// Next Token is ','
+	if !p.peekTokenIs(token.COMMA) {
+		msg := "no ,"
+		p.errors = append(p.errors, msg)
+		return nil
+	}
 	p.nextToken()
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) {
+	// Next Token is 'INT' or register or Label
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+		p.errors = append(p.errors, msg)
 		return nil
 	}
 	p.nextToken()
 
+	code.Op = 0x23
+	code.Length = 2
+
 	switch p.curToken.Type {
 	case token.INT:
-		code.Op = 0x23
-		code.Length = 2
 		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
 			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
@@ -529,6 +588,15 @@ func (p *Parser) SUBLStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x27
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+		if !p.peekTokenIs(token.COMMA) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		p.nextToken()
+		p.nextToken()
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	default:
 		code.Op = 0xFF
 	}
@@ -537,22 +605,33 @@ func (p *Parser) SUBLStatment(code *opcode.Opcode) *opcode.Opcode {
 	return code
 }
 
+// ANDStatment  AND Parser
+// AND r1, r2		; r1  ← (r1) AND (r2)
+// AND r, adr [,x]	; r   ← (r)  AND (実行アドレス)
 func (p *Parser) ANDStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
-	p.nextToken()
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) {
+	// Next Token is ','
+	if !p.peekTokenIs(token.COMMA) {
+		msg := "no ,"
+		p.errors = append(p.errors, msg)
 		return nil
 	}
 	p.nextToken()
-
+	// Next Token is 'INT' or register or Label
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	code.Op = 0x30
+	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		code.Op = 0x30
-		code.Length = 2
 		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
 			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
@@ -572,6 +651,15 @@ func (p *Parser) ANDStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x34
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+		if !p.peekTokenIs(token.COMMA) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		p.nextToken()
+		p.nextToken()
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	default:
 		code.Op = 0xFF
 	}
@@ -579,22 +667,36 @@ func (p *Parser) ANDStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	return code
 }
+
+// ORStatment  OR Parser
+// OR r1, r2		; r1  ← (r1) OR (r2)
+// OR r, adr [,x]	; r   ← (r)  OR (実行アドレス)
 func (p *Parser) ORStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
+	// Next Token is ','
+	if !p.peekTokenIs(token.COMMA) {
+		msg := "no ,"
+		p.errors = append(p.errors, msg)
+		return nil
+	}
 	p.nextToken()
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) {
+	// Next Token is 'INT' or register or Label
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+		p.errors = append(p.errors, msg)
 		return nil
 	}
 	p.nextToken()
 
+	code.Op = 0x31
+	code.Length = 2
+
 	switch p.curToken.Type {
 	case token.INT:
-		code.Op = 0x31
-		code.Length = 2
 		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
 			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
@@ -614,6 +716,15 @@ func (p *Parser) ORStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x35
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+		if !p.peekTokenIs(token.COMMA) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		p.nextToken()
+		p.nextToken()
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	default:
 		code.Op = 0xFF
 	}
@@ -621,22 +732,34 @@ func (p *Parser) ORStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	return code
 }
+
+// XORStatment  XOR Parser
+// XOR r1, r2		; r1  ← (r1) XOR (r2)
+// XOR r, adr [,x]	; r   ← (r)  XOR (実行アドレス)
 func (p *Parser) XORStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
-	p.nextToken()
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) {
+	// Next Token is ','
+	if !p.peekTokenIs(token.COMMA) {
+		msg := "no ,"
+		p.errors = append(p.errors, msg)
 		return nil
 	}
 	p.nextToken()
-
+	// Next Token is 'INT' or register or Label
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	code.Op = 0x32
+	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		code.Op = 0x32
-		code.Length = 2
 		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
 			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
@@ -656,6 +779,15 @@ func (p *Parser) XORStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x36
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+		if !p.peekTokenIs(token.COMMA) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		p.nextToken()
+		p.nextToken()
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	default:
 		code.Op = 0xFF
 	}
@@ -664,23 +796,33 @@ func (p *Parser) XORStatment(code *opcode.Opcode) *opcode.Opcode {
 	return code
 }
 
-//compare arithmetic
+// CPAStatment  CPA Parser
+// CPA r1, r2		;
+// CPA r, adr [,x]	;
 func (p *Parser) CPAStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
-	p.nextToken()
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) {
+	// Next Token is ','
+	if !p.peekTokenIs(token.COMMA) {
+		msg := "no ,"
+		p.errors = append(p.errors, msg)
 		return nil
 	}
 	p.nextToken()
-
+	// Next Token is 'INT' or register or Label
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	code.Op = 0x40
+	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		code.Op = 0x40
-		code.Length = 2
 		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
 			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
@@ -700,6 +842,16 @@ func (p *Parser) CPAStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x44
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+		if !p.peekTokenIs(token.COMMA) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		p.nextToken()
+		p.nextToken()
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
+
 	default:
 		code.Op = 0xFF
 	}
@@ -708,23 +860,35 @@ func (p *Parser) CPAStatment(code *opcode.Opcode) *opcode.Opcode {
 	return code
 }
 
-//compare logical
+// CPLStatment  CPL Parser
+// CPL r1, r2
+// CPL r, adr [,x]
 func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
+	// Next Token is ','
+	if !p.peekTokenIs(token.COMMA) {
+		msg := "no ,"
+		p.errors = append(p.errors, msg)
+		return nil
+	}
 	p.nextToken()
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) {
+	// Next Token is 'INT' or register or Label
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+		p.errors = append(p.errors, msg)
 		return nil
 	}
 	p.nextToken()
 
+	code.Op = 0x41
+	code.Length = 2
+
 	switch p.curToken.Type {
 	case token.INT:
-		code.Op = 0x41
-		code.Length = 2
 		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
 			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
@@ -744,6 +908,15 @@ func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x45
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+		if !p.peekTokenIs(token.COMMA) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		p.nextToken()
+		p.nextToken()
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	default:
 		code.Op = 0xFF
 	}
@@ -752,21 +925,31 @@ func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 	return code
 }
 
-//shift left arithmetic
+// SLAStatment  SLA Parser
+// SLA r, adr [,x]	;
 func (p *Parser) SLAStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
-	p.nextToken()
-	if !p.peekTokenIs(token.INT) {
+	// Next Token is ','
+	if !p.peekTokenIs(token.COMMA) {
+		msg := "no ,"
+		p.errors = append(p.errors, msg)
 		return nil
 	}
 	p.nextToken()
+	// Next Token is 'INT' or register or Label
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("Parse Error : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	code.Op = 0x50
+	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		code.Op = 0x50
-		code.Length = 2
 		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
 			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
@@ -782,6 +965,15 @@ func (p *Parser) SLAStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.nextToken()
 		p.nextToken()
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+		if !p.peekTokenIs(token.COMMA) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		p.nextToken()
+		p.nextToken()
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	default:
 		code.Op = 0xFF
 	}
@@ -789,21 +981,31 @@ func (p *Parser) SLAStatment(code *opcode.Opcode) *opcode.Opcode {
 	return code
 }
 
-//shift right arithmetic
+// SRAStatment  SRA Parser
+// SRA r, adr [,x]	;
 func (p *Parser) SRAStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
-	p.nextToken()
-	if !p.peekTokenIs(token.INT) {
+	// Next Token is ','
+	if !p.peekTokenIs(token.COMMA) {
+		msg := "no ,"
+		p.errors = append(p.errors, msg)
 		return nil
 	}
 	p.nextToken()
+	// Next Token is 'INT' or register or Label
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("Parse Error : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	code.Op = 0x51
+	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		code.Op = 0x51
-		code.Length = 2
 		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
 			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
@@ -819,6 +1021,15 @@ func (p *Parser) SRAStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.nextToken()
 		p.nextToken()
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+		if !p.peekTokenIs(token.COMMA) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		p.nextToken()
+		p.nextToken()
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	default:
 		code.Op = 0xFF
 	}
@@ -826,21 +1037,31 @@ func (p *Parser) SRAStatment(code *opcode.Opcode) *opcode.Opcode {
 	return code
 }
 
-//shift left logical
+// SLLStatment  SLL Parser
+// SLL r, adr [,x]	;
 func (p *Parser) SLLStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
-	p.nextToken()
-	if !p.peekTokenIs(token.INT) {
+	// Next Token is ','
+	if !p.peekTokenIs(token.COMMA) {
+		msg := "no ,"
+		p.errors = append(p.errors, msg)
 		return nil
 	}
 	p.nextToken()
+	// Next Token is 'INT' or register or Label
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("Parse Error : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	code.Op = 0x52
+	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		code.Op = 0x52
-		code.Length = 2
 		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
 			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
@@ -856,6 +1077,15 @@ func (p *Parser) SLLStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.nextToken()
 		p.nextToken()
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+		if !p.peekTokenIs(token.COMMA) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		p.nextToken()
+		p.nextToken()
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	default:
 		code.Op = 0xFF
 	}
@@ -863,21 +1093,31 @@ func (p *Parser) SLLStatment(code *opcode.Opcode) *opcode.Opcode {
 	return code
 }
 
-//shift right logical
+// SRLStatment  SRL Parser
+// SRL r, adr [,x]	;
 func (p *Parser) SRLStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
-	p.nextToken()
-	if !p.peekTokenIs(token.INT) {
+	// Next Token is ','
+	if !p.peekTokenIs(token.COMMA) {
+		msg := "no ,"
+		p.errors = append(p.errors, msg)
 		return nil
 	}
 	p.nextToken()
+	// Next Token is 'INT' or register or Label
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("Parse Error : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	code.Op = 0x53
+	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		code.Op = 0x53
-		code.Length = 2
 		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
 			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
@@ -886,6 +1126,15 @@ func (p *Parser) SRLStatment(code *opcode.Opcode) *opcode.Opcode {
 		}
 		code.Addr = uint16(addr)
 
+		if !p.peekTokenIs(token.COMMA) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		p.nextToken()
+		p.nextToken()
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
 		if !p.peekTokenIs(token.COMMA) {
 			code.Code |= uint16(code.Op) << 8
 			return code
