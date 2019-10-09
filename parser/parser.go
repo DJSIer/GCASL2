@@ -1037,21 +1037,31 @@ func (p *Parser) SRAStatment(code *opcode.Opcode) *opcode.Opcode {
 	return code
 }
 
-//shift left logical
+// SLLStatment  SLL Parser
+// SLL r, adr [,x]	;
 func (p *Parser) SLLStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
-	p.nextToken()
-	if !p.peekTokenIs(token.INT) {
+	// Next Token is ','
+	if !p.peekTokenIs(token.COMMA) {
+		msg := "no ,"
+		p.errors = append(p.errors, msg)
 		return nil
 	}
 	p.nextToken()
+	// Next Token is 'INT' or register or Label
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("Parse Error : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	code.Op = 0x52
+	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		code.Op = 0x52
-		code.Length = 2
 		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
 			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
@@ -1067,6 +1077,15 @@ func (p *Parser) SLLStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.nextToken()
 		p.nextToken()
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+		if !p.peekTokenIs(token.COMMA) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		p.nextToken()
+		p.nextToken()
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	default:
 		code.Op = 0xFF
 	}
@@ -1074,21 +1093,31 @@ func (p *Parser) SLLStatment(code *opcode.Opcode) *opcode.Opcode {
 	return code
 }
 
-//shift right logical
+// SRLStatment  SRL Parser
+// SRL r, adr [,x]	;
 func (p *Parser) SRLStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
-	p.nextToken()
-	if !p.peekTokenIs(token.INT) {
+	// Next Token is ','
+	if !p.peekTokenIs(token.COMMA) {
+		msg := "no ,"
+		p.errors = append(p.errors, msg)
 		return nil
 	}
 	p.nextToken()
+	// Next Token is 'INT' or register or Label
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("Parse Error : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	code.Op = 0x53
+	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		code.Op = 0x53
-		code.Length = 2
 		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
 			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
@@ -1097,6 +1126,15 @@ func (p *Parser) SRLStatment(code *opcode.Opcode) *opcode.Opcode {
 		}
 		code.Addr = uint16(addr)
 
+		if !p.peekTokenIs(token.COMMA) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		p.nextToken()
+		p.nextToken()
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
 		if !p.peekTokenIs(token.COMMA) {
 			code.Code |= uint16(code.Op) << 8
 			return code

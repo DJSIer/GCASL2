@@ -100,15 +100,15 @@ shift right arithmetic
 
 ### SLL
 shift left logical
-- [ ] `SLL r,addr`
-- [ ] `SLL r,LABEL`
-- [ ] `SLL r,addr,x`
+- [x] `SLL r,addr`
+- [x] `SLL r,LABEL`
+- [x] `SLL r,addr,x`
 
 ### SRL
 shift right logical
-- [ ] `SRL r,addr`
-- [ ] `SRL r,LABEL`
-- [ ] `SRL r,addr,x`
+- [x] `SRL r,addr`
+- [x] `SRL r,LABEL`
+- [x] `SRL r,addr,x`
 
 ### JMI
 jump on minus
