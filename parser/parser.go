@@ -65,8 +65,11 @@ func New(l *lexer.Lexer) *Parser {
 		token.JUMP:  p.JUMPStatment,
 		token.JPL:   p.JPLStatment,
 		token.JOV:   p.JOVStatment,
+		token.PUSH:  p.PUSHStatment,
+		token.POP:   p.POPStatment,
 		token.START: p.STARTStatment,
 		token.RET:   p.RETStatment,
+		token.DS:    p.DSStatment,
 	}
 	p.symbolTable = symbol.NewSymbolTable()
 	p.nextToken()
@@ -120,6 +123,8 @@ func (p *Parser) ParseProgram() []opcode.Opcode {
 			}
 			p.nextToken()
 		}
+		code.Token = p.curToken
+
 		switch p.curToken.Type {
 		case token.LAD:
 			code = p.instSet[p.curToken.Type](code)
@@ -169,6 +174,12 @@ func (p *Parser) ParseProgram() []opcode.Opcode {
 			code = p.instSet[p.curToken.Type](code)
 		case token.JOV:
 			code = p.instSet[p.curToken.Type](code)
+		case token.PUSH:
+			code = p.instSet[p.curToken.Type](code)
+		case token.POP:
+			code = p.instSet[p.curToken.Type](code)
+		case token.DS:
+			code = p.instSet[p.curToken.Type](code)
 		default:
 			p.errors = append(p.errors, "Parse Error : '"+p.curToken.Literal+"'\n")
 			code = nil
@@ -182,6 +193,40 @@ func (p *Parser) ParseProgram() []opcode.Opcode {
 	return Excode
 }
 
+//LabelToAddress ラベルアドレスの解決
+func (p *Parser) LabelToAddress(code []opcode.Opcode) []opcode.Opcode {
+	for i, op := range code {
+		if len(op.AddrLabel) != 0 {
+			addr, ok := p.symbolTable.Resolve(op.AddrLabel)
+			if !ok {
+				msg := fmt.Sprintf("%qは解決できません", op.AddrLabel)
+				p.errors = append(p.errors, msg)
+				return nil
+			}
+			code[i].Addr = addr.Address
+		}
+	}
+	return code
+}
+
+// DSStatment 領域確保
+// [LABEL] DS NUM
+func (p *Parser) DSStatment(code *opcode.Opcode) *opcode.Opcode {
+	code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Label: code.Label, Token: code.Token}
+	if !p.peekTokenIs(token.INT) {
+		msg := fmt.Sprintf("数値でなければいけません。対象 : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	Length, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
+	if err != nil {
+		return nil
+	}
+	code.Length = int(Length)
+	return code
+}
+
 // STARTStatment `Label START` - [実行番地]
 // START プログラムの実行番地を定義
 func (p *Parser) STARTStatment(code *opcode.Opcode) *opcode.Opcode {
@@ -191,7 +236,7 @@ func (p *Parser) STARTStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.errors = append(p.errors, msg)
 		return nil
 	}
-	code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Label: sy}
+	code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Label: sy, Token: code.Token}
 	return code
 }
 
@@ -199,7 +244,7 @@ func (p *Parser) STARTStatment(code *opcode.Opcode) *opcode.Opcode {
 // RET ;PR ← ((SP)),
 //	   ;SP ← (SP) + 1
 func (p *Parser) RETStatment(code *opcode.Opcode) *opcode.Opcode {
-	code = &opcode.Opcode{Op: 0x81, Code: 0x8100, Length: 1, Label: code.Label}
+	code = &opcode.Opcode{Op: 0x81, Code: 0x8100, Length: 1, Label: code.Label, Token: code.Token}
 	return code
 }
 
@@ -269,7 +314,7 @@ func (p *Parser) LDStatment(code *opcode.Opcode) *opcode.Opcode {
 // LADStatment Load Address Parser
 // LAD r,adr [,x] ; r ← 実行アドレス
 func (p *Parser) LADStatment(code *opcode.Opcode) *opcode.Opcode {
-	code = &opcode.Opcode{Op: 0x12, Code: 0x1200, Length: 2, Label: code.Label}
+	code = &opcode.Opcode{Op: 0x12, Code: 0x1200, Length: 2, Label: code.Label, Token: code.Token}
 
 	if !p.expectPeek(token.REGISTER) {
 		return nil
@@ -1377,5 +1422,55 @@ func (p *Parser) JOVStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	code.Code |= uint16(registerNumber[p.curToken.Literal])
+	return code
+}
+
+// PUSHStatment PUSH
+// PUSH adr, [,x];
+func (p *Parser) PUSHStatment(code *opcode.Opcode) *opcode.Opcode {
+	code = &opcode.Opcode{Op: 0x70, Code: 0x7000, Length: 2, Label: code.Label}
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("アドレス値またはラベルでなければいけません。対象 : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	switch p.curToken.Type {
+	case token.INT:
+		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		if err != nil {
+			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+			p.errors = append(p.errors, msg)
+			return nil
+		}
+		code.Addr = uint16(addr)
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+	}
+	if !p.peekTokenIs(token.COMMA) {
+		return code
+	}
+	p.nextToken()
+	if !p.peekTokenIs(token.REGISTER) {
+		msg := fmt.Sprintf("レジスタでなければいけません。対象 : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	code.Code |= uint16(registerNumber[p.curToken.Literal])
+	return code
+}
+
+// POPStatment PUSH
+// POP adr, [,x];
+func (p *Parser) POPStatment(code *opcode.Opcode) *opcode.Opcode {
+	code = &opcode.Opcode{Op: 0x71, Code: 0x7100, Length: 1, Label: code.Label}
+	if !p.peekTokenIs(token.REGISTER) {
+		msg := fmt.Sprintf("レジスタでなければいけません。対象 : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
 	return code
 }

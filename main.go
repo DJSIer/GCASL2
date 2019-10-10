@@ -10,16 +10,18 @@ import (
 func main() {
 	lex := lexer.New(`
 	PRG START
-		JPL 0000,GR1
-		JPL 1234
-		JPL PRG
-		JOV 0000,GR1
-		JOV 1234
-		JOV PRG
+	GO LAD GR1,0,GR2
+	LAD GR2,B
+	RET
+	A DS 1
+	END
 	`)
 	p := parser.New(lex)
-	fmt.Println(p.ParseProgram())
+	code := p.ParseProgram()
+	fmt.Println(code)
+	fmt.Println(p.LabelToAddress(code))
 	fmt.Println(p.Errors())
+
 	/*for {
 		t := lex.NextToken()
 		fmt.Println(t)

@@ -1,6 +1,10 @@
 package opcode
 
-import "github.com/DJSIer/GCASL2/symbol"
+import (
+	"github.com/DJSIer/GCASL2/symbol"
+
+	"github.com/DJSIer/GCASL2/token"
+)
 
 // Opcode CASL2 Opcode struct
 type Opcode struct {
@@ -10,6 +14,7 @@ type Opcode struct {
 	Op        uint8         //1byte
 	Length    int           //Opcode Length
 	Label     symbol.Symbol //Label
+	Token     token.Token   //token
 }
 
 func New() *Opcode {
