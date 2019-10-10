@@ -112,54 +112,54 @@ shift right logical
 
 ### JMI
 jump on minus
-- [ ] `JMI addr`
-- [ ] `JMI addr , x`
-- [ ] `JMI LABEL`
-- [ ] `JMI LABEL, x`
+- [x] `JMI addr`
+- [x] `JMI addr , x`
+- [x] `JMI LABEL`
+- [x] `JMI LABEL, x`
 
 ### JNZ
 jump on nonzero
-- [ ] `JNZ addr`
-- [ ] `JNZ addr , x`
-- [ ] `JNZ LABEL`
-- [ ] `JNZ LABEL, x`
+- [x] `JNZ addr`
+- [x] `JNZ addr , x`
+- [x] `JNZ LABEL`
+- [x] `JNZ LABEL, x`
 
 ### JZE
 jump on zero
-- [ ] `JZE addr`
-- [ ] `JZE addr , x`
-- [ ] `JZE LABEL`
-- [ ] `JZE LABEL, x`
+- [x] `JZE addr`
+- [x] `JZE addr , x`
+- [x] `JZE LABEL`
+- [x] `JZE LABEL, x`
 
 ### JUMP
 unconditional jump
-- [ ] `JUMP addr`
-- [ ] `JUMP addr , x`
-- [ ] `JUMP LABEL`
-- [ ] `JUMP LABEL, x`
+- [x] `JUMP addr`
+- [x] `JUMP addr , x`
+- [x] `JUMP LABEL`
+- [x] `JUMP LABEL, x`
 
 ### JPL
 jump on plus
-- [ ] `JPL addr`
-- [ ] `JPL addr , x`
-- [ ] `JPL LABEL`
-- [ ] `JPL LABEL, x`
+- [x] `JPL addr`
+- [x] `JPL addr , x`
+- [x] `JPL LABEL`
+- [x] `JPL LABEL, x`
 
 ### JOV
 jump on overflow
-- [ ] `JOV addr`
-- [ ] `JOV addr , x`
-- [ ] `JOV LABEL`
-- [ ] `JOV LABEL, x`
+- [x] `JOV addr`
+- [x] `JOV addr , x`
+- [x] `JOV LABEL`
+- [x] `JOV LABEL, x`
 
 ### PUSH
-- [ ] `PUSH addr`
-- [ ] `PUSH addr , x`
-- [ ] `PUSH LABEL`
-- [ ] `PUSH LABEL, x`
+- [x] `PUSH addr`
+- [x] `PUSH addr , x`
+- [x] `PUSH LABEL`
+- [x] `PUSH LABEL, x`
 
 ### POP
-- [ ] `POP r`
+- [x] `POP r`
 
 ### CALL
 - [ ] `CALL addr`
@@ -169,6 +169,7 @@ jump on overflow
 
 ### RET
 return from subroutine
+- [x] `RET`
 ### SVC
 - [ ] `SVC addr`
 - [ ] `SVC addr , x`
