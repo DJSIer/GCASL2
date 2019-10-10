@@ -60,6 +60,11 @@ func New(l *lexer.Lexer) *Parser {
 		token.SLL:   p.SLLStatment,
 		token.SRL:   p.SRLStatment,
 		token.JMI:   p.JMIStatment,
+		token.JNZ:   p.JNZStatment,
+		token.JZE:   p.JZEStatment,
+		token.JUMP:  p.JUMPStatment,
+		token.JPL:   p.JPLStatment,
+		token.JOV:   p.JOVStatment,
 		token.START: p.STARTStatment,
 		token.RET:   p.RETStatment,
 	}
@@ -150,9 +155,19 @@ func (p *Parser) ParseProgram() []opcode.Opcode {
 			code = p.instSet[p.curToken.Type](code)
 		case token.JMI:
 			code = p.instSet[p.curToken.Type](code)
+		case token.JNZ:
+			code = p.instSet[p.curToken.Type](code)
+		case token.JZE:
+			code = p.instSet[p.curToken.Type](code)
+		case token.JUMP:
+			code = p.instSet[p.curToken.Type](code)
 		case token.START:
 			code = p.instSet[p.curToken.Type](code)
 		case token.RET:
+			code = p.instSet[p.curToken.Type](code)
+		case token.JPL:
+			code = p.instSet[p.curToken.Type](code)
+		case token.JOV:
 			code = p.instSet[p.curToken.Type](code)
 		default:
 			p.errors = append(p.errors, "Parse Error : '"+p.curToken.Literal+"'\n")
@@ -1149,26 +1164,218 @@ func (p *Parser) SRLStatment(code *opcode.Opcode) *opcode.Opcode {
 	return code
 }
 
-// JMIStatment JMI
+// JMIStatment Jump on Minus
+// JMI adr, [,x];
 func (p *Parser) JMIStatment(code *opcode.Opcode) *opcode.Opcode {
-	code.Op = 0x61
-	code.Length = 2
-	if !p.expectPeek(token.INT) {
-		return nil
-	}
-	addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
-	if err != nil {
-		msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+	code = &opcode.Opcode{Op: 0x61, Code: 0x6100, Length: 2, Label: code.Label}
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("アドレス値またはラベルでなければいけません。対象 : %q\n", p.peekToken.Literal)
 		p.errors = append(p.errors, msg)
 		return nil
 	}
-	code.Addr = uint16(addr)
+	p.nextToken()
+	switch p.curToken.Type {
+	case token.INT:
+		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		if err != nil {
+			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+			p.errors = append(p.errors, msg)
+			return nil
+		}
+		code.Addr = uint16(addr)
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+	}
 	if !p.peekTokenIs(token.COMMA) {
+		return code
+	}
+	p.nextToken()
+	if !p.peekTokenIs(token.REGISTER) {
+		msg := fmt.Sprintf("レジスタでなければいけません。対象 : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
 		return nil
 	}
 	p.nextToken()
+	code.Code |= uint16(registerNumber[p.curToken.Literal])
+	return code
+}
+
+// JNZStatment Jump on non Zero
+// JNZ adr, [,x];
+func (p *Parser) JNZStatment(code *opcode.Opcode) *opcode.Opcode {
+	code = &opcode.Opcode{Op: 0x62, Code: 0x6200, Length: 2, Label: code.Label}
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("アドレス値またはラベルでなければいけません。対象 : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	switch p.curToken.Type {
+	case token.INT:
+		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		if err != nil {
+			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+			p.errors = append(p.errors, msg)
+			return nil
+		}
+		code.Addr = uint16(addr)
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+	}
+	if !p.peekTokenIs(token.COMMA) {
+		return code
+	}
+	p.nextToken()
+	if !p.peekTokenIs(token.REGISTER) {
+		msg := fmt.Sprintf("レジスタでなければいけません。対象 : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
 	p.nextToken()
 	code.Code |= uint16(registerNumber[p.curToken.Literal])
-	code.Code |= uint16(code.Op) << 8
+	return code
+}
+
+// JZEStatment Jump on Zero
+// JZE adr, [,x];
+func (p *Parser) JZEStatment(code *opcode.Opcode) *opcode.Opcode {
+	code = &opcode.Opcode{Op: 0x63, Code: 0x6300, Length: 2, Label: code.Label}
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("アドレス値またはラベルでなければいけません。対象 : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	switch p.curToken.Type {
+	case token.INT:
+		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		if err != nil {
+			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+			p.errors = append(p.errors, msg)
+			return nil
+		}
+		code.Addr = uint16(addr)
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+	}
+	if !p.peekTokenIs(token.COMMA) {
+		return code
+	}
+	p.nextToken()
+	if !p.peekTokenIs(token.REGISTER) {
+		msg := fmt.Sprintf("レジスタでなければいけません。対象 : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	code.Code |= uint16(registerNumber[p.curToken.Literal])
+	return code
+}
+
+// JUMPStatment Unconditional jump
+// JUMP adr, [,x];
+func (p *Parser) JUMPStatment(code *opcode.Opcode) *opcode.Opcode {
+	code = &opcode.Opcode{Op: 0x64, Code: 0x6400, Length: 2, Label: code.Label}
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("アドレス値またはラベルでなければいけません。対象 : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	switch p.curToken.Type {
+	case token.INT:
+		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		if err != nil {
+			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+			p.errors = append(p.errors, msg)
+			return nil
+		}
+		code.Addr = uint16(addr)
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+	}
+	if !p.peekTokenIs(token.COMMA) {
+		return code
+	}
+	p.nextToken()
+	if !p.peekTokenIs(token.REGISTER) {
+		msg := fmt.Sprintf("レジスタでなければいけません。対象 : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	code.Code |= uint16(registerNumber[p.curToken.Literal])
+	return code
+}
+
+// JPLStatment Jump on plus
+// JPL adr, [,x];
+func (p *Parser) JPLStatment(code *opcode.Opcode) *opcode.Opcode {
+	code = &opcode.Opcode{Op: 0x65, Code: 0x6500, Length: 2, Label: code.Label}
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("アドレス値またはラベルでなければいけません。対象 : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	switch p.curToken.Type {
+	case token.INT:
+		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		if err != nil {
+			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+			p.errors = append(p.errors, msg)
+			return nil
+		}
+		code.Addr = uint16(addr)
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+	}
+	if !p.peekTokenIs(token.COMMA) {
+		return code
+	}
+	p.nextToken()
+	if !p.peekTokenIs(token.REGISTER) {
+		msg := fmt.Sprintf("レジスタでなければいけません。対象 : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	code.Code |= uint16(registerNumber[p.curToken.Literal])
+	return code
+}
+
+// JOVStatment Jump on Overflow
+// JOV adr, [,x];
+func (p *Parser) JOVStatment(code *opcode.Opcode) *opcode.Opcode {
+	code = &opcode.Opcode{Op: 0x66, Code: 0x6600, Length: 2, Label: code.Label}
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) {
+		msg := fmt.Sprintf("アドレス値またはラベルでなければいけません。対象 : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	switch p.curToken.Type {
+	case token.INT:
+		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		if err != nil {
+			msg := fmt.Sprintf("parse error %q as Addr", p.curToken.Literal)
+			p.errors = append(p.errors, msg)
+			return nil
+		}
+		code.Addr = uint16(addr)
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+	}
+	if !p.peekTokenIs(token.COMMA) {
+		return code
+	}
+	p.nextToken()
+	if !p.peekTokenIs(token.REGISTER) {
+		msg := fmt.Sprintf("レジスタでなければいけません。対象 : %q\n", p.peekToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	p.nextToken()
+	code.Code |= uint16(registerNumber[p.curToken.Literal])
 	return code
 }
