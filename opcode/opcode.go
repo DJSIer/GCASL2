@@ -8,13 +8,13 @@ import (
 
 // Opcode CASL2 Opcode struct
 type Opcode struct {
-	Code      uint16        //2byte
-	Addr      uint16        //Address
-	AddrLabel string        //Address Label
-	Op        uint8         //1byte
-	Length    int           //Opcode Length
-	Label     symbol.Symbol //Label
-	Token     token.Token   //token
+	Code      uint16         //2byte
+	Addr      uint16         //Address
+	AddrLabel string         //Address Label
+	Op        uint8          //1byte
+	Length    int            //Opcode Length
+	Label     *symbol.Symbol `json:"Label,omitempty"` //Label
+	Token     token.Token    //token
 }
 
 func New() *Opcode {

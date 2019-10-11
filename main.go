@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 
 	"github.com/DJSIer/GCASL2/lexer"
@@ -10,24 +12,31 @@ import (
 func main() {
 	lex := lexer.New(`
 	PRG START
-	GO LAD GR1,0,GR2
-	LAD GR2,B
-	RET
+	A LD GR1,GR2
+	LAD GR1,A,GR3
+	ADDA GR1,A
 	A DS 1
-	END
+	  DC 1010,16
 	`)
 	p := parser.New(lex)
-	code := p.ParseProgram()
-	fmt.Println(code)
-	fmt.Println(p.LabelToAddress(code))
-	fmt.Println(p.Errors())
-
-	/*for {
-		t := lex.NextToken()
-		fmt.Println(t)
-		if t.Type == token.EOF {
-			break
-		}
-	}*/
-
+	code, err := p.ParseProgram()
+	if err != nil {
+		var buf bytes.Buffer
+		b, _ := json.Marshal(p.Errors())
+		buf.Write(b)
+		fmt.Println("{\"Result\":\"NG\",\"error\" :" + buf.String() + "}")
+		return
+	}
+	code, err = p.LabelToAddress(code)
+	if err != nil {
+		var buf bytes.Buffer
+		b, _ := json.Marshal(p.Errors())
+		buf.Write(b)
+		fmt.Println("{\"Result\":\"NG\",\"error\" :" + buf.String() + "}")
+		return
+	}
+	var buf bytes.Buffer
+	b, _ := json.Marshal(code)
+	buf.Write(b)
+	fmt.Println("{\"Result\":\"OK\",\"code\" :" + buf.String() + "}")
 }
