@@ -52,7 +52,7 @@ const (
 )
 
 type Token struct {
-	Type    TokenType
+	Type    TokenType `json:"-"`
 	Literal string
 }
 
