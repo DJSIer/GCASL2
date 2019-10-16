@@ -80,6 +80,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.RET:   p.RETStatment,
 		token.DS:    p.DSStatment,
 		token.DC:    p.DCStatment,
+		token.END:   p.ENDStatment,
 	}
 	p.symbolTable = symbol.NewSymbolTable()
 	p.nextToken()
@@ -198,6 +199,8 @@ func (p *Parser) ParseProgram() ([]opcode.Opcode, error) {
 			code = p.instSet[p.curToken.Type](code)
 		case token.DC:
 			code = p.instSet[p.curToken.Type](code)
+		case token.END:
+			code = p.instSet[p.curToken.Type](code)
 		default:
 			//p.parserError(p.line, fmt.Sprintf("%q : 解決できません\n", p.curToken.Literal))
 			code = nil
@@ -291,6 +294,12 @@ func (p *Parser) STARTStatment(code *opcode.Opcode) *opcode.Opcode {
 		return nil
 	}
 	code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Label: &sy, Token: code.Token}
+	return code
+}
+
+// ENDStatment `END`
+func (p *Parser) ENDStatment(code *opcode.Opcode) *opcode.Opcode {
+	code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Label: code.Label, Token: code.Token}
 	return code
 }
 
