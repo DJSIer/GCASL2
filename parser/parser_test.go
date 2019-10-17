@@ -17,11 +17,10 @@ func TestSymbol(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		opcode := p.ParseProgram()
-		if len(p.Errors()) != 0 {
-			t.Fatal(p.errors)
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
 		}
-
 		op := opcode[0]
 		if op.Label.Label != tt.expectedlabel {
 			t.Fatalf("Label : %s now :%s", tt.expectedlabel, op.Label.Label)
@@ -36,15 +35,19 @@ func TestLDAStatment(t *testing.T) {
 		expectedAddr uint16
 	}{
 		{"RAMEN LAD GR1,0", 0x12, 0x1210, 0x0000},
-		{"LAD GR3,131070", 0x12, 0x1230, 0xFFFF},
+		{"LAD GR3,10", 0x12, 0x1230, 0x000A},
 		{"LAD GR1,0,GR3", 0x12, 0x1213, 0x0000},
+		{"LAD GR1,#0010,GR3", 0x12, 0x1213, 0x010},
 		{"LAD GR1,GO,GR3", 0x12, 0x1213, 0x0000},
 	}
 
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		opcode := p.ParseProgram()
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
 		op := opcode[0]
 		if op.Op != tt.expectedOp {
 			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
@@ -67,11 +70,15 @@ func TestLDStatment(t *testing.T) {
 	}{
 		{"LD GR2,GO", 0x10, 0x1020, 0x0000},
 		{"LD GR2,1234", 0x10, 0x1020, 0x04d2},
+		{"LD GR1,#0010,GR3", 0x10, 0x1013, 0x010},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		opcode := p.ParseProgram()
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
 		op := opcode[0]
 		if op.Op != tt.expectedOp {
 			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
@@ -98,7 +105,10 @@ func TestSTStatment(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		opcode := p.ParseProgram()
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
 		op := opcode[0]
 		if op.Op != tt.expectedOp {
 			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
@@ -126,7 +136,10 @@ func TestADDAStatment(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		opcode := p.ParseProgram()
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
 		op := opcode[0]
 		if op.Op != tt.expectedOp {
 			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
@@ -154,7 +167,10 @@ func TestSUBAStatment(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		opcode := p.ParseProgram()
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
 		op := opcode[0]
 		if op.Op != tt.expectedOp {
 			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
@@ -182,7 +198,10 @@ func TestADDLStatment(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		opcode := p.ParseProgram()
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
 		op := opcode[0]
 		if op.Op != tt.expectedOp {
 			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
@@ -209,7 +228,10 @@ func TestSUBLStatment(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		opcode := p.ParseProgram()
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
 		op := opcode[0]
 		if op.Op != tt.expectedOp {
 			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
@@ -236,7 +258,10 @@ func TestANDStatment(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		opcode := p.ParseProgram()
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
 		op := opcode[0]
 		if op.Op != tt.expectedOp {
 			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
@@ -263,7 +288,10 @@ func TestORStatment(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		opcode := p.ParseProgram()
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
 		op := opcode[0]
 		if op.Op != tt.expectedOp {
 			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
@@ -290,7 +318,10 @@ func TestXORStatment(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		opcode := p.ParseProgram()
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
 		op := opcode[0]
 		if op.Op != tt.expectedOp {
 			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
@@ -317,7 +348,10 @@ func TestCPAStatment(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		opcode := p.ParseProgram()
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
 		op := opcode[0]
 		if op.Op != tt.expectedOp {
 			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
@@ -344,7 +378,10 @@ func TestCPLStatment(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		opcode := p.ParseProgram()
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
 		op := opcode[0]
 		if op.Op != tt.expectedOp {
 			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
@@ -371,7 +408,10 @@ func TestSLAStatment(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		opcode := p.ParseProgram()
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
 		op := opcode[0]
 		if op.Op != tt.expectedOp {
 			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
@@ -398,7 +438,10 @@ func TestSRAStatment(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		opcode := p.ParseProgram()
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
 		op := opcode[0]
 		if op.Op != tt.expectedOp {
 			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
@@ -425,7 +468,10 @@ func TestSLLStatment(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		opcode := p.ParseProgram()
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
 		op := opcode[0]
 		if op.Op != tt.expectedOp {
 			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
@@ -452,7 +498,10 @@ func TestSRLStatment(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		opcode := p.ParseProgram()
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
 		op := opcode[0]
 		if op.Op != tt.expectedOp {
 			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
@@ -477,7 +526,10 @@ func TestJMIStatment(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		opcode := p.ParseProgram()
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
 		op := opcode[0]
 		if op.Op != tt.expectedOp {
 			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
