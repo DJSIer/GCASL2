@@ -10,7 +10,9 @@ import (
 )
 
 func main() {
-	lex := lexer.New("ST GR1,#1000, \n LD GR1,GR3 \nA END")
+	lex := lexer.New(`
+	ST GR1,#1000,GR2
+	`)
 
 	p := parser.New(lex)
 	code, err := p.ParseProgram()
