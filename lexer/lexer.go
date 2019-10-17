@@ -48,6 +48,7 @@ func (l *Lexer) NextToken() token.Token {
 			l.readChar()
 			tok.Literal = "=" + l.readNumber()
 			tok.Type = token.INT
+			return tok
 		}
 	case 0:
 		tok.Literal = ""
