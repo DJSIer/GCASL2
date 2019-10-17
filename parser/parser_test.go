@@ -101,6 +101,7 @@ func TestSTStatment(t *testing.T) {
 		{"ST GR2,0", 0x11, 0x1120, 0x0000},
 		{"ST GR1,0,GR3", 0x11, 0x1113, 0x0000},
 		{"ST GR7,0,GR7", 0x11, 0x1177, 0x0000},
+		{"ST GR1,#0010,GR3", 0x11, 0x1113, 0x010},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
@@ -132,6 +133,7 @@ func TestADDAStatment(t *testing.T) {
 		{"ADDA GR2,0", 0x20, 0x2020, 0x0000},
 		{"ADDA GR1,0,GR3", 0x20, 0x2013, 0x0000},
 		{"ADDA GR7,GR7", 0x24, 0x2477, 0x0000},
+		{"ADDA GR1,#0010,GR3", 0x20, 0x2013, 0x010},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
@@ -163,6 +165,7 @@ func TestSUBAStatment(t *testing.T) {
 		{"SUBA GR2,0", 0x21, 0x2120, 0x0000},
 		{"SUBA GR1,0,GR3", 0x21, 0x2113, 0x0000},
 		{"SUBA GR7,GR7", 0x25, 0x2577, 0x0000},
+		{"SUBA GR1,#0010,GR3", 0x21, 0x2113, 0x010},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
@@ -194,6 +197,7 @@ func TestADDLStatment(t *testing.T) {
 		{"ADDL GR2,0", 0x22, 0x2220, 0x0000},
 		{"ADDL GR1,0,GR3", 0x22, 0x2213, 0x0000},
 		{"ADDL GR7,GR7", 0x26, 0x2677, 0x0000},
+		{"ADDL GR1,#0010,GR3", 0x22, 0x2213, 0x010},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
@@ -224,6 +228,7 @@ func TestSUBLStatment(t *testing.T) {
 		{"SUBL GR2,0", 0x23, 0x2320, 0x0000},
 		{"SUBL GR1,0,GR3", 0x23, 0x2313, 0x0000},
 		{"SUBL GR7,GR7", 0x27, 0x2777, 0x0000},
+		{"SUBL GR1,#0010,GR3", 0x23, 0x2313, 0x0010},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)

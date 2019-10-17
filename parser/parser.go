@@ -208,7 +208,7 @@ func (p *Parser) ParseProgram() ([]opcode.Opcode, error) {
 			code = nil
 		}
 		if code == nil {
-			return p.Excode, fmt.Errorf("コンパイルエラー")
+			return p.Excode, fmt.Errorf("%q : コンパイルエラー", p.curToken)
 		}
 
 		p.Excode = append(p.Excode, *code)
@@ -562,7 +562,7 @@ func (p *Parser) SUBAStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -727,7 +727,7 @@ func (p *Parser) SUBLStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -744,14 +744,10 @@ func (p *Parser) SUBLStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-
-		if !p.peekTokenIs(token.COMMA) {
-			code.Code |= uint16(code.Op) << 8
-			return code
+		code, err = p.indexRegisterParse(code)
+		if err != nil {
+			return nil
 		}
-		p.nextToken()
-		p.nextToken()
-		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.REGISTER:
 		code.Op = 0x27
 		code.Length = 1
@@ -775,17 +771,10 @@ func (p *Parser) SUBLStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = addr
-		if !p.peekTokenIs(token.COMMA) {
-			code.Code |= uint16(code.Op) << 8
-			return code
-		}
-		p.nextToken()
-		if !p.peekTokenIs(token.REGISTER) {
-			p.parserError(p.line, fmt.Sprintf("レジスタではありません。対象 : %q", p.peekToken.Literal))
+		code, err = p.indexRegisterParse(code)
+		if err != nil {
 			return nil
 		}
-		p.nextToken()
-		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	default:
 		code.Op = 0xFF
 	}
