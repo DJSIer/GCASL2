@@ -37,16 +37,18 @@ func (l *Lexer) NextToken() token.Token {
 	case ',':
 		tok = newToken(token.COMMA, l.ch)
 	case '#':
-		if isDegit(l.peekChar()) {
+		if isHex(l.peekChar()) {
 			l.readChar()
-			tok.Literal = "#" + l.readNumber()
+			tok.Literal = "#" + l.readHexNumber()
 			tok.Type = token.HEX
+			return tok
 		}
 	case '=':
 		if isDegit(l.peekChar()) {
 			l.readChar()
 			tok.Literal = "=" + l.readNumber()
 			tok.Type = token.INT
+			return tok
 		}
 	case 0:
 		tok.Literal = ""
@@ -86,6 +88,13 @@ func (l *Lexer) readNumber() string {
 	}
 	return l.input[position:l.position]
 }
+func (l *Lexer) readHexNumber() string {
+	position := l.position
+	for isHex(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
 func (l *Lexer) peekChar() byte {
 	if l.readPosition >= len(l.input) {
 		return 0
@@ -96,6 +105,9 @@ func (l *Lexer) peekChar() byte {
 
 func isDegit(ch byte) bool {
 	return '0' <= ch && ch <= '9'
+}
+func isHex(ch byte) bool {
+	return '0' <= ch && ch <= '9' || 'A' <= ch && ch <= 'F' || 'a' <= ch && ch <= 'f'
 }
 func isLetter(ch byte) bool {
 	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z'

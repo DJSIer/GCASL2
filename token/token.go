@@ -49,6 +49,7 @@ const (
 	RET       = "RET"
 	SVC       = "SVC"
 	NOP       = "NOP"
+	ADLI      = "DC"
 )
 
 type Token struct {
