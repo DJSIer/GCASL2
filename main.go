@@ -11,8 +11,7 @@ import (
 
 func main() {
 	lex := lexer.New(`
-		PRG ADDL GR1,1000,GR3
-		ADDL GR1,1000,GR3
+	LD GR1,GR2
 	`)
 
 	p := parser.New(lex)

@@ -799,7 +799,7 @@ func (p *Parser) ANDStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -814,14 +814,10 @@ func (p *Parser) ANDStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-
-		if !p.peekTokenIs(token.COMMA) {
-			code.Code |= uint16(code.Op) << 8
-			return code
+		code, err = p.indexRegisterParse(code)
+		if err != nil {
+			return nil
 		}
-		p.nextToken()
-		p.nextToken()
-		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.REGISTER:
 		code.Op = 0x34
 		code.Length = 1
@@ -835,6 +831,16 @@ func (p *Parser) ANDStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.nextToken()
 		p.nextToken()
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.HEX:
+		addr, err := p.hexToAddress(p.curToken.Literal)
+		if err != nil {
+			return nil
+		}
+		code.Addr = addr
+		code, err = p.indexRegisterParse(code)
+		if err != nil {
+			return nil
+		}
 	default:
 		code.Op = 0xFF
 	}
@@ -859,7 +865,7 @@ func (p *Parser) ORStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -876,14 +882,10 @@ func (p *Parser) ORStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-
-		if !p.peekTokenIs(token.COMMA) {
-			code.Code |= uint16(code.Op) << 8
-			return code
+		code, err = p.indexRegisterParse(code)
+		if err != nil {
+			return nil
 		}
-		p.nextToken()
-		p.nextToken()
-		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.REGISTER:
 		code.Op = 0x35
 		code.Length = 1
@@ -897,6 +899,16 @@ func (p *Parser) ORStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.nextToken()
 		p.nextToken()
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.HEX:
+		addr, err := p.hexToAddress(p.curToken.Literal)
+		if err != nil {
+			return nil
+		}
+		code.Addr = addr
+		code, err = p.indexRegisterParse(code)
+		if err != nil {
+			return nil
+		}
 	default:
 		code.Op = 0xFF
 	}
@@ -921,7 +933,7 @@ func (p *Parser) XORStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -936,14 +948,10 @@ func (p *Parser) XORStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-
-		if !p.peekTokenIs(token.COMMA) {
-			code.Code |= uint16(code.Op) << 8
-			return code
+		code, err = p.indexRegisterParse(code)
+		if err != nil {
+			return nil
 		}
-		p.nextToken()
-		p.nextToken()
-		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.REGISTER:
 		code.Op = 0x36
 		code.Length = 1
@@ -957,6 +965,16 @@ func (p *Parser) XORStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.nextToken()
 		p.nextToken()
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.HEX:
+		addr, err := p.hexToAddress(p.curToken.Literal)
+		if err != nil {
+			return nil
+		}
+		code.Addr = addr
+		code, err = p.indexRegisterParse(code)
+		if err != nil {
+			return nil
+		}
 	default:
 		code.Op = 0xFF
 	}
@@ -981,7 +999,7 @@ func (p *Parser) CPAStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -996,14 +1014,10 @@ func (p *Parser) CPAStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-
-		if !p.peekTokenIs(token.COMMA) {
-			code.Code |= uint16(code.Op) << 8
-			return code
+		code, err = p.indexRegisterParse(code)
+		if err != nil {
+			return nil
 		}
-		p.nextToken()
-		p.nextToken()
-		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.REGISTER:
 		code.Op = 0x44
 		code.Length = 1
@@ -1017,7 +1031,16 @@ func (p *Parser) CPAStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.nextToken()
 		p.nextToken()
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-
+	case token.HEX:
+		addr, err := p.hexToAddress(p.curToken.Literal)
+		if err != nil {
+			return nil
+		}
+		code.Addr = addr
+		code, err = p.indexRegisterParse(code)
+		if err != nil {
+			return nil
+		}
 	default:
 		code.Op = 0xFF
 	}
@@ -1042,7 +1065,7 @@ func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1059,14 +1082,10 @@ func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-
-		if !p.peekTokenIs(token.COMMA) {
-			code.Code |= uint16(code.Op) << 8
-			return code
+		code, err = p.indexRegisterParse(code)
+		if err != nil {
+			return nil
 		}
-		p.nextToken()
-		p.nextToken()
-		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.REGISTER:
 		code.Op = 0x45
 		code.Length = 1
@@ -1080,6 +1099,16 @@ func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.nextToken()
 		p.nextToken()
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.HEX:
+		addr, err := p.hexToAddress(p.curToken.Literal)
+		if err != nil {
+			return nil
+		}
+		code.Addr = addr
+		code, err = p.indexRegisterParse(code)
+		if err != nil {
+			return nil
+		}
 	default:
 		code.Op = 0xFF
 	}
@@ -1102,7 +1131,7 @@ func (p *Parser) SLAStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1117,14 +1146,10 @@ func (p *Parser) SLAStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-
-		if !p.peekTokenIs(token.COMMA) {
-			code.Code |= uint16(code.Op) << 8
-			return code
+		code, err = p.indexRegisterParse(code)
+		if err != nil {
+			return nil
 		}
-		p.nextToken()
-		p.nextToken()
-		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.LABEL:
 		code.AddrLabel = p.curToken.Literal
 		if !p.peekTokenIs(token.COMMA) {
@@ -1134,6 +1159,16 @@ func (p *Parser) SLAStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.nextToken()
 		p.nextToken()
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.HEX:
+		addr, err := p.hexToAddress(p.curToken.Literal)
+		if err != nil {
+			return nil
+		}
+		code.Addr = addr
+		code, err = p.indexRegisterParse(code)
+		if err != nil {
+			return nil
+		}
 	default:
 		code.Op = 0xFF
 	}

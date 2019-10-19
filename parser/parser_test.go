@@ -259,6 +259,7 @@ func TestANDStatment(t *testing.T) {
 		{"AND GR2,0", 0x30, 0x3020, 0x0000},
 		{"AND GR1,0,GR3", 0x30, 0x3013, 0x0000},
 		{"AND GR7,GR7", 0x34, 0x3477, 0x0000},
+		{"AND GR1,#0010,GR3", 0x30, 0x3013, 0x0010},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
@@ -289,6 +290,7 @@ func TestORStatment(t *testing.T) {
 		{"OR GR2,0", 0x31, 0x3120, 0x0000},
 		{"OR GR1,0,GR3", 0x31, 0x3113, 0x0000},
 		{"OR GR7,GR7", 0x35, 0x3577, 0x0000},
+		{"OR GR1,#0010,GR3", 0x31, 0x3113, 0x0010},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
@@ -319,6 +321,7 @@ func TestXORStatment(t *testing.T) {
 		{"XOR GR2,0", 0x32, 0x3220, 0x0000},
 		{"XOR GR1,0,GR3", 0x32, 0x3213, 0x0000},
 		{"XOR GR7,GR7", 0x36, 0x3677, 0x0000},
+		{"XOR GR1,#0010,GR3", 0x32, 0x3213, 0x0010},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
@@ -347,8 +350,9 @@ func TestCPAStatment(t *testing.T) {
 		expectedAddr uint16
 	}{
 		{"CPA GR2,0", 0x40, 0x4020, 0x0000},
-		{"CPA GR1,0,GR3", 0x40, 0x4013, 0x0000},
+		{"CPA GR1,10,GR3", 0x40, 0x4013, 0x000A},
 		{"CPA GR7,GR7", 0x44, 0x4477, 0x0000},
+		{"CPA GR1,#0010,GR3", 0x40, 0x4013, 0x0010},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
@@ -377,8 +381,9 @@ func TestCPLStatment(t *testing.T) {
 		expectedAddr uint16
 	}{
 		{"CPL GR2,0", 0x41, 0x4120, 0x0000},
-		{"CPL GR1,0,GR3", 0x41, 0x4113, 0x0000},
+		{"CPL GR1,A,GR3", 0x41, 0x4113, 0x0000},
 		{"CPL GR7,GR7", 0x45, 0x4577, 0x0000},
+		{"CPL GR1,#0010,GR3", 0x41, 0x4113, 0x0010},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
@@ -408,7 +413,7 @@ func TestSLAStatment(t *testing.T) {
 	}{
 		{"SLA GR2,0", 0x50, 0x5020, 0x0000},
 		{"SLA GR1,0,GR3", 0x50, 0x5013, 0x0000},
-		{"SLA GR7,GR7", 0x00, 0x000, 0x0000},
+		{"SLA GR1,#0010,GR3", 0x50, 0x5013, 0x0010},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
