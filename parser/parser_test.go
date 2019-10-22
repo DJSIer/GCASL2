@@ -443,7 +443,7 @@ func TestSRAStatment(t *testing.T) {
 	}{
 		{"SRA GR2,1000", 0x51, 0x5120, 0x03e8},
 		{"SRA GR1,0,GR3", 0x51, 0x5113, 0x0000},
-		{"SRA GR7,GR7", 0x00, 0x000, 0x0000},
+		{"SRA GR1,#0010,GR3", 0x51, 0x5113, 0x0010},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
@@ -473,7 +473,7 @@ func TestSLLStatment(t *testing.T) {
 	}{
 		{"SLL GR2,1000", 0x52, 0x5220, 0x03e8},
 		{"SLL GR1,0,GR3", 0x52, 0x5213, 0x0000},
-		{"SLL GR7,GR7", 0x00, 0x000, 0x0000},
+		{"SLL GR1,#0010,GR3", 0x52, 0x5213, 0x0010},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
@@ -503,7 +503,7 @@ func TestSRLStatment(t *testing.T) {
 	}{
 		{"SRL GR2,1000", 0x53, 0x5320, 0x03e8},
 		{"SRL GR1,0,GR3", 0x53, 0x5313, 0x0000},
-		{"SRL GR7,GR7", 0x00, 0x000, 0x0000},
+		{"SRL GR1,#0010,GR3", 0x53, 0x5313, 0x0010},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
@@ -531,13 +531,220 @@ func TestJMIStatment(t *testing.T) {
 		expectedCode uint16
 		expectedAddr uint16
 	}{
-		{"JMI 1000, GR3", 0x61, 0x6103, 0x03e8},
+		{"JMI 1000", 0x61, 0x6100, 0x03e8},
+		{"JMI #1000, GR3", 0x61, 0x6103, 0x1000},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
 		opcode, err := p.ParseProgram()
 		if err != nil {
+			t.Fatal(err)
+		}
+		op := opcode[0]
+		if op.Op != tt.expectedOp {
+			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
+		}
+		if op.Addr != tt.expectedAddr {
+			t.Fatalf("Addr : 0x%04x Now : 0x%04x", tt.expectedAddr, op.Addr)
+		}
+		if op.Code != tt.expectedCode {
+			t.Fatalf("code : 0x%04x Now : 0x%04x", tt.expectedCode, op.Code)
+		}
+	}
+}
+func TestJNZStatment(t *testing.T) {
+	tests := []struct {
+		input        string
+		expectedOp   uint8
+		expectedCode uint16
+		expectedAddr uint16
+	}{
+		{"JNZ 1000", 0x62, 0x6200, 0x03e8},
+		{"JNZ #1000, GR3", 0x62, 0x6203, 0x1000},
+	}
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
+		op := opcode[0]
+		if op.Op != tt.expectedOp {
+			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
+		}
+		if op.Addr != tt.expectedAddr {
+			t.Fatalf("Addr : 0x%04x Now : 0x%04x", tt.expectedAddr, op.Addr)
+		}
+		if op.Code != tt.expectedCode {
+			t.Fatalf("code : 0x%04x Now : 0x%04x", tt.expectedCode, op.Code)
+		}
+	}
+}
+func TestJZEStatment(t *testing.T) {
+	tests := []struct {
+		input        string
+		expectedOp   uint8
+		expectedCode uint16
+		expectedAddr uint16
+	}{
+		{"JZE 1000", 0x63, 0x6300, 0x03e8},
+		{"JZE #1000, GR3", 0x63, 0x6303, 0x1000},
+	}
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
+		op := opcode[0]
+		if op.Op != tt.expectedOp {
+			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
+		}
+		if op.Addr != tt.expectedAddr {
+			t.Fatalf("Addr : 0x%04x Now : 0x%04x", tt.expectedAddr, op.Addr)
+		}
+		if op.Code != tt.expectedCode {
+			t.Fatalf("code : 0x%04x Now : 0x%04x", tt.expectedCode, op.Code)
+		}
+	}
+}
+func TestJUMPStatment(t *testing.T) {
+	tests := []struct {
+		input        string
+		expectedOp   uint8
+		expectedCode uint16
+		expectedAddr uint16
+	}{
+		{"JUMP 1000", 0x64, 0x6400, 0x03e8},
+		{"JUMP #1000, GR3", 0x64, 0x6403, 0x1000},
+	}
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
+		op := opcode[0]
+		if op.Op != tt.expectedOp {
+			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
+		}
+		if op.Addr != tt.expectedAddr {
+			t.Fatalf("Addr : 0x%04x Now : 0x%04x", tt.expectedAddr, op.Addr)
+		}
+		if op.Code != tt.expectedCode {
+			t.Fatalf("code : 0x%04x Now : 0x%04x", tt.expectedCode, op.Code)
+		}
+	}
+}
+func TestJPLStatment(t *testing.T) {
+	tests := []struct {
+		input        string
+		expectedOp   uint8
+		expectedCode uint16
+		expectedAddr uint16
+	}{
+		{"JPL 1000", 0x65, 0x6500, 0x03e8},
+		{"JPL #1000, GR3", 0x65, 0x6503, 0x1000},
+	}
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(p.Errors())
+			t.Fatal(err)
+		}
+		op := opcode[0]
+		if op.Op != tt.expectedOp {
+			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
+		}
+		if op.Addr != tt.expectedAddr {
+			t.Fatalf("Addr : 0x%04x Now : 0x%04x", tt.expectedAddr, op.Addr)
+		}
+		if op.Code != tt.expectedCode {
+			t.Fatalf("code : 0x%04x Now : 0x%04x", tt.expectedCode, op.Code)
+		}
+	}
+}
+func TestJOVStatment(t *testing.T) {
+	tests := []struct {
+		input        string
+		expectedOp   uint8
+		expectedCode uint16
+		expectedAddr uint16
+	}{
+		{"JOV 1000", 0x66, 0x6600, 0x03e8},
+		{"JOV #1000, GR3", 0x66, 0x6603, 0x1000},
+	}
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(p.Errors())
+			t.Fatal(err)
+		}
+		op := opcode[0]
+		if op.Op != tt.expectedOp {
+			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
+		}
+		if op.Addr != tt.expectedAddr {
+			t.Fatalf("Addr : 0x%04x Now : 0x%04x", tt.expectedAddr, op.Addr)
+		}
+		if op.Code != tt.expectedCode {
+			t.Fatalf("code : 0x%04x Now : 0x%04x", tt.expectedCode, op.Code)
+		}
+	}
+}
+func TestPUSHStatment(t *testing.T) {
+	tests := []struct {
+		input        string
+		expectedOp   uint8
+		expectedCode uint16
+		expectedAddr uint16
+	}{
+		{"PUSH 1000", 0x70, 0x7000, 0x03e8},
+		{"PUSH #1000, GR3", 0x70, 0x7003, 0x1000},
+	}
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(p.Errors())
+			t.Fatal(err)
+		}
+		op := opcode[0]
+		if op.Op != tt.expectedOp {
+			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
+		}
+		if op.Addr != tt.expectedAddr {
+			t.Fatalf("Addr : 0x%04x Now : 0x%04x", tt.expectedAddr, op.Addr)
+		}
+		if op.Code != tt.expectedCode {
+			t.Fatalf("code : 0x%04x Now : 0x%04x", tt.expectedCode, op.Code)
+		}
+	}
+}
+func TestPOPStatment(t *testing.T) {
+	tests := []struct {
+		input        string
+		expectedOp   uint8
+		expectedCode uint16
+		expectedAddr uint16
+	}{
+		{"POP GR1", 0x71, 0x7110, 0x0000},
+	}
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(p.Errors())
 			t.Fatal(err)
 		}
 		op := opcode[0]
