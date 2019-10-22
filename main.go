@@ -11,7 +11,7 @@ import (
 
 func main() {
 	lex := lexer.New(`
-	ST GR1,#1000,GR2
+	LD GR1,GR2
 	`)
 
 	p := parser.New(lex)
