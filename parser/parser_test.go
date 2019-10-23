@@ -27,6 +27,37 @@ func TestSymbol(t *testing.T) {
 		}
 	}
 }
+func TestLDCtatment(t *testing.T) {
+	tests := []struct {
+		input        string
+		expectedOp   uint8
+		expectedCode uint16
+		expectedAddr uint16
+	}{
+		{"DC 0", 0x00, 0x0000, 0x0000},
+		{"DC 10", 0x00, 0x0000, 0x000A},
+		{"DC #1000", 0x00, 0x0000, 0x1000},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		opcode, err := p.ParseProgram()
+		if err != nil {
+			t.Fatal(err)
+		}
+		op := opcode[0]
+		if op.Op != tt.expectedOp {
+			t.Fatalf("Opcode : 0x%02x Now : 0x%02x", tt.expectedOp, op.Op)
+		}
+		if op.Code != tt.expectedCode {
+			t.Fatalf("code : 0x%04x Now : 0x%04x", tt.expectedCode, op.Code)
+		}
+		if op.Addr != tt.expectedAddr {
+			t.Fatalf("Addr : 0x%04x Now : 0x%04x", tt.expectedAddr, op.Addr)
+		}
+	}
+}
 func TestLDAStatment(t *testing.T) {
 	tests := []struct {
 		input        string

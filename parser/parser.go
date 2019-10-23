@@ -129,6 +129,7 @@ func (p *Parser) parserWarning(msg string) {
 // ParseProgram CASL2 Parse
 func (p *Parser) ParseProgram() ([]opcode.Opcode, error) {
 	p.Excode = []opcode.Opcode{}
+	//endCheck := false
 	for !p.curTokenIs(token.EOF) {
 		code := &opcode.Opcode{Length: 1}
 		//Label
@@ -218,6 +219,9 @@ func (p *Parser) ParseProgram() ([]opcode.Opcode, error) {
 		//program line number add
 		p.line++
 	}
+	/*if !endCheck {
+		return p.Excode, fmt.Errorf("%qがありません。", "END")
+	}*/
 	return p.Excode, nil
 }
 
@@ -239,34 +243,51 @@ func (p *Parser) LabelToAddress(code []opcode.Opcode) ([]opcode.Opcode, error) {
 //DCStatment 定数定義
 func (p *Parser) DCStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Label: code.Label, Token: code.Token}
-	if !p.peekTokenIs(token.INT) {
+	switch p.peekToken.Type {
+	case token.INT:
+		num, err := strconv.ParseInt(p.peekToken.Literal, 0, 64)
+		if err != nil {
+			return nil
+		}
+		code.Addr = uint16(num)
+	case token.HEX:
+		addr, err := p.hexToAddress(p.peekToken.Literal)
+		if err != nil {
+			return nil
+		}
+		code.Addr = addr
+	default:
 		p.parserError(p.line, fmt.Sprintf("数値でなければいけません。対象 : %q", p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
-	num, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
-	if err != nil {
-		return nil
-	}
-	code.Addr = uint16(num)
 	for {
 		if !p.peekTokenIs(token.COMMA) {
 			return code
 		}
+		p.Excode = append(p.Excode, *code)
+		p.byteAdress++
+		code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Token: code.Token}
 		p.nextToken()
-		if !p.peekTokenIs(token.INT) {
+
+		switch p.peekToken.Type {
+		case token.INT:
+			num, err := strconv.ParseInt(p.peekToken.Literal, 0, 64)
+			if err != nil {
+				return nil
+			}
+			code.Addr = uint16(num)
+		case token.HEX:
+			addr, err := p.hexToAddress(p.peekToken.Literal)
+			if err != nil {
+				return nil
+			}
+			code.Addr = addr
+		default:
 			p.parserError(p.line, fmt.Sprintf("数値でなければいけません。対象 : %q", p.peekToken.Literal))
 			return nil
 		}
 		p.nextToken()
-		num, err := strconv.ParseUint(p.curToken.Literal, 0, 64)
-		if err != nil {
-			return nil
-		}
-		p.Excode = append(p.Excode, *code)
-		p.byteAdress++
-		code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Token: code.Token}
-		code.Addr = uint16(num)
 	}
 }
 
