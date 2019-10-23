@@ -256,6 +256,11 @@ func (p *Parser) DCStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = addr
+	case token.STRING:
+		if p.peekToken.Literal == "nil" {
+			p.parserError(p.line,fmt.Sprintf("%q"))
+			return nil
+		}
 	default:
 		p.parserError(p.line, fmt.Sprintf("数値でなければいけません。対象 : %q", p.peekToken.Literal))
 		return nil
