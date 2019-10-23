@@ -50,6 +50,13 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Type = token.INT
 			return tok
 		}
+	case '\'':
+		if isCaslLetter(l.peekChar()) {
+			l.readChar()
+			tok.Literal = l.readCaslLetter()
+			tok.Type = token.STRING
+			return tok
+		}
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
@@ -95,6 +102,15 @@ func (l *Lexer) readHexNumber() string {
 	}
 	return l.input[position:l.position]
 }
+func (l *Lexer) readCaslLetter() string {
+	position := l.position
+	for l.ch != '\'' && isCaslLetter(l.ch) {
+		l.readChar()
+	}
+	str := l.input[position:l.position]
+	l.readChar()
+	return str
+}
 func (l *Lexer) peekChar() byte {
 	if l.readPosition >= len(l.input) {
 		return 0
@@ -115,7 +131,10 @@ func isLetter(ch byte) bool {
 func isLetterDegit(ch byte) bool {
 	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || '0' <= ch && ch <= '9'
 }
-
+func isCaslLetter(ch byte) bool {
+	_, ok := token.LookupLetter(ch)
+	return ok
+}
 func newToken(tokenType token.TokenType, ch byte) token.Token {
 	return token.Token{Type: tokenType, Literal: string(ch)}
 }

@@ -11,7 +11,7 @@ import (
 
 func main() {
 	lex := lexer.New(`
-	DC 10,#1000
+	DC 'AA'
 	LD GR1,GR2
 	`)
 
