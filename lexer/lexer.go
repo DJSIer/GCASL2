@@ -1,6 +1,8 @@
 package lexer
 
 import (
+	"fmt"
+
 	"github.com/DJSIer/GCASL2/token"
 )
 
@@ -47,8 +49,18 @@ func (l *Lexer) NextToken() token.Token {
 		if isDegit(l.peekChar()) {
 			l.readChar()
 			tok.Literal = "=" + l.readNumber()
-			tok.Type = token.INT
+			tok.Type = token.EQINT
 			return tok
+		}
+		if l.peekChar() == '#' {
+			l.readChar()
+			if isHex(l.peekChar()) {
+				l.readChar()
+				tok.Literal = "=#" + l.readHexNumber()
+				tok.Type = token.EQHEX
+				fmt.Println(tok)
+				return tok
+			}
 		}
 	case '\'':
 		tok.Literal = l.readCaslLetter()
