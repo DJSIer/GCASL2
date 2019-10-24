@@ -418,14 +418,15 @@ func (p *Parser) LADStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
+	r1 := p.curToken.Literal
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
 	if !p.expectPeek(token.COMMA) {
-		p.parserError(p.line, fmt.Sprintf("%qがありません。対象 : %q\n", ",", p.peekToken.Literal))
+		p.parserError(p.line, fmt.Sprintf("LAD %s の後にカンマがありません。", r1))
 		return nil
 	}
 
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
-		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
+		p.parserError(p.line, fmt.Sprintf("LAD %s,%q の値が数値・ラベルではありません。対象 : %q", r1, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
@@ -446,12 +447,13 @@ func (p *Parser) LADStatment(code *opcode.Opcode) *opcode.Opcode {
 		}
 		code.Addr = addr
 	}
+	r2 := p.curToken.Literal
 	if !p.peekTokenIs(token.COMMA) {
 		return code
 	}
 	p.nextToken()
 	if !p.peekTokenIs(token.REGISTER) {
-		p.parserError(p.line, fmt.Sprintf("レジスタではありません。対象 : %q\n", p.peekToken.Literal))
+		p.parserError(p.line, fmt.Sprintf("LAD %s,%s,%qレジスタではありません。対象 : %q\n", r1, r2, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
