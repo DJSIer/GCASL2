@@ -38,6 +38,13 @@ func (l *Lexer) NextToken() token.Token {
 	switch l.ch {
 	case ',':
 		tok = newToken(token.COMMA, l.ch)
+	case '-':
+		if isDegit(l.peekChar()) {
+			l.readChar()
+			tok.Literal = "-" + l.readNumber()
+			tok.Type = token.INT
+			return tok
+		}
 	case '#':
 		if isHex(l.peekChar()) {
 			l.readChar()
