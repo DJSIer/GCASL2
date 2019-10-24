@@ -347,14 +347,16 @@ func (p *Parser) RETStatment(code *opcode.Opcode) *opcode.Opcode {
 // LD r1, r2 		;r1 ← (r2)
 // LD r, adr [,x] 	;r  ← (実行アドレス)
 func (p *Parser) LDStatment(code *opcode.Opcode) *opcode.Opcode {
+
 	if !p.expectPeek(token.REGISTER) {
+		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	r1 := p.curToken.Literal
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
 	// Next Token is ','
 	if !p.peekTokenIs(token.COMMA) {
-		p.parserError(p.line, fmt.Sprintf("LD %s の後にカンマがありません。", r1))
+		p.parserError(p.line, fmt.Sprintf("%s %s の後にカンマがありません。", code.Token.Literal, r1))
 		return nil
 	}
 	p.nextToken()
@@ -416,12 +418,13 @@ func (p *Parser) LADStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x12, Code: 0x1200, Length: 2, Label: code.Label, Token: code.Token}
 
 	if !p.expectPeek(token.REGISTER) {
+		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	r1 := p.curToken.Literal
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
 	if !p.expectPeek(token.COMMA) {
-		p.parserError(p.line, fmt.Sprintf("LAD %s の後にカンマがありません。", r1))
+		p.parserError(p.line, fmt.Sprintf("%s %s の後にカンマがありません。", code.Token.Literal, r1))
 		return nil
 	}
 
@@ -467,23 +470,25 @@ func (p *Parser) LADStatment(code *opcode.Opcode) *opcode.Opcode {
 func (p *Parser) STStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Code: 0x1100, Op: 0x11, Length: 2, Label: code.Label, Token: code.Token}
 	if !p.expectPeek(token.REGISTER) {
+		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
+	r1 := p.curToken.Literal
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
 	if !p.expectPeek(token.COMMA) {
-		p.parserError(p.line, fmt.Sprintf("%qがありません。対象 : %q\n", ",", p.peekToken.Literal))
+		p.parserError(p.line, fmt.Sprintf("%s %s の後にカンマがありません。", code.Token.Literal, r1))
 		return nil
 	}
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
-		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
+		p.parserError(p.line, fmt.Sprintf("%s %s,%q の値が数値・ラベルではありません。対象 : %q", code.Token.Literal, r1, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 64)
+		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
-			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
+			p.parserError(p.line, fmt.Sprintf("%s %s,%q の数値が適正ではありません。\n 数値は0~65535までです。\n対象 : %q\n", code.Token.Literal, r1, p.curToken.Literal, p.curToken.Literal))
 			return nil
 		}
 		code.Addr = uint16(addr)
@@ -496,12 +501,13 @@ func (p *Parser) STStatment(code *opcode.Opcode) *opcode.Opcode {
 		}
 		code.Addr = addr
 	}
+	r2 := p.curToken.Literal
 	if !p.peekTokenIs(token.COMMA) {
 		return code
 	}
 	p.nextToken()
 	if !p.peekTokenIs(token.REGISTER) {
-		p.parserError(p.line, fmt.Sprintf("レジスタではありません。対象 : %q\n", p.peekToken.Literal))
+		p.parserError(p.line, fmt.Sprintf("%s %s,%s,%qレジスタではありません。対象 : %q\n", code.Token.Literal, r1, r2, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
@@ -515,6 +521,7 @@ func (p *Parser) STStatment(code *opcode.Opcode) *opcode.Opcode {
 func (p *Parser) ADDAStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
+		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
@@ -585,6 +592,7 @@ func (p *Parser) ADDAStatment(code *opcode.Opcode) *opcode.Opcode {
 func (p *Parser) SUBAStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
+		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
@@ -667,6 +675,7 @@ func (p *Parser) SUBAStatment(code *opcode.Opcode) *opcode.Opcode {
 func (p *Parser) ADDLStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
+		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
@@ -750,6 +759,7 @@ func (p *Parser) ADDLStatment(code *opcode.Opcode) *opcode.Opcode {
 func (p *Parser) SUBLStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
+		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
@@ -822,6 +832,7 @@ func (p *Parser) SUBLStatment(code *opcode.Opcode) *opcode.Opcode {
 func (p *Parser) ANDStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
+		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
@@ -888,6 +899,7 @@ func (p *Parser) ANDStatment(code *opcode.Opcode) *opcode.Opcode {
 func (p *Parser) ORStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
+		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
@@ -956,6 +968,7 @@ func (p *Parser) ORStatment(code *opcode.Opcode) *opcode.Opcode {
 func (p *Parser) XORStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
+		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
@@ -1022,6 +1035,7 @@ func (p *Parser) XORStatment(code *opcode.Opcode) *opcode.Opcode {
 func (p *Parser) CPAStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
+		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
@@ -1088,6 +1102,7 @@ func (p *Parser) CPAStatment(code *opcode.Opcode) *opcode.Opcode {
 func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	if !p.expectPeek(token.REGISTER) {
+		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
@@ -1154,6 +1169,7 @@ func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 // SLA r, adr [,x]	;
 func (p *Parser) SLAStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
+		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
@@ -1213,6 +1229,7 @@ func (p *Parser) SLAStatment(code *opcode.Opcode) *opcode.Opcode {
 // SRA r, adr [,x]	;
 func (p *Parser) SRAStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
+		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
@@ -1273,6 +1290,7 @@ func (p *Parser) SRAStatment(code *opcode.Opcode) *opcode.Opcode {
 // SLL r, adr [,x]	;
 func (p *Parser) SLLStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
+		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
@@ -1332,6 +1350,7 @@ func (p *Parser) SLLStatment(code *opcode.Opcode) *opcode.Opcode {
 // SRL r, adr [,x]	;
 func (p *Parser) SRLStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
+		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
@@ -1665,7 +1684,7 @@ func (p *Parser) PUSHStatment(code *opcode.Opcode) *opcode.Opcode {
 func (p *Parser) POPStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x71, Code: 0x7100, Length: 1, Label: code.Label}
 	if !p.peekTokenIs(token.REGISTER) {
-		p.parserError(p.line, fmt.Sprintf("レジスタではありません。対象 : %q\n", p.peekToken.Literal))
+		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
