@@ -231,7 +231,7 @@ func (p *Parser) LabelToAddress(code []opcode.Opcode) ([]opcode.Opcode, error) {
 		if len(op.AddrLabel) != 0 {
 			addr, ok := p.symbolTable.Resolve(op.AddrLabel)
 			if !ok {
-				p.parserError(p.line, fmt.Sprintf("%qは解決できません", op.AddrLabel))
+				p.parserError(i+1, fmt.Sprintf("%qは解決できません", op.AddrLabel))
 				return nil, fmt.Errorf("Labelが解決できません")
 			}
 			code[i].Addr = addr.Address
