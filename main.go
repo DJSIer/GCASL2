@@ -11,7 +11,7 @@ import (
 
 func main() {
 	lex := lexer.New(`
-	ADDAGR2,D
+	ADDA GR2,E
 	D DC 1
 	`)
 
