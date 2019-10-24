@@ -350,16 +350,17 @@ func (p *Parser) LDStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !p.expectPeek(token.REGISTER) {
 		return nil
 	}
+	r1 := p.curToken.Literal
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
 	// Next Token is ','
 	if !p.peekTokenIs(token.COMMA) {
-		p.parserError(p.line, fmt.Sprintf("%qがありません。対象 : %q", ",", p.peekToken.Literal))
+		p.parserError(p.line, fmt.Sprintf("LD %s の後にカンマがありません。", r1))
 		return nil
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
-		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q", p.peekToken.Literal))
+		p.parserError(p.line, fmt.Sprintf("LD %s,%q の値が数値・レジスタ・ラベルではありません。対象 : %q", r1, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
@@ -1504,7 +1505,7 @@ func (p *Parser) JZEStatment(code *opcode.Opcode) *opcode.Opcode {
 // JUMPStatment Unconditional jump
 // JUMP adr, [,x];
 func (p *Parser) JUMPStatment(code *opcode.Opcode) *opcode.Opcode {
-	code = &opcode.Opcode{Op: 0x64, Code: 0x6400, Length: 2, Label: code.Label}
+	code = &opcode.Opcode{Op: 0x64, Code: 0x6400, Length: 2, Label: code.Label, Token: code.Token}
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
@@ -1543,7 +1544,7 @@ func (p *Parser) JUMPStatment(code *opcode.Opcode) *opcode.Opcode {
 // JPLStatment Jump on plus
 // JPL adr, [,x];
 func (p *Parser) JPLStatment(code *opcode.Opcode) *opcode.Opcode {
-	code = &opcode.Opcode{Op: 0x65, Code: 0x6500, Length: 2, Label: code.Label}
+	code = &opcode.Opcode{Op: 0x65, Code: 0x6500, Length: 2, Label: code.Label, Token: code.Token}
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
@@ -1582,7 +1583,7 @@ func (p *Parser) JPLStatment(code *opcode.Opcode) *opcode.Opcode {
 // JOVStatment Jump on Overflow
 // JOV adr, [,x];
 func (p *Parser) JOVStatment(code *opcode.Opcode) *opcode.Opcode {
-	code = &opcode.Opcode{Op: 0x66, Code: 0x6600, Length: 2, Label: code.Label}
+	code = &opcode.Opcode{Op: 0x66, Code: 0x6600, Length: 2, Label: code.Label, Token: code.Token}
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
@@ -1621,7 +1622,7 @@ func (p *Parser) JOVStatment(code *opcode.Opcode) *opcode.Opcode {
 // PUSHStatment PUSH
 // PUSH adr, [,x];
 func (p *Parser) PUSHStatment(code *opcode.Opcode) *opcode.Opcode {
-	code = &opcode.Opcode{Op: 0x70, Code: 0x7000, Length: 2, Label: code.Label}
+	code = &opcode.Opcode{Op: 0x70, Code: 0x7000, Length: 2, Label: code.Label, Token: code.Token}
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
