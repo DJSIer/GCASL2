@@ -205,7 +205,7 @@ func (p *Parser) ParseProgram() ([]opcode.Opcode, error) {
 		case token.END:
 			code = p.instSet[p.curToken.Type](code)
 		default:
-			//p.parserError(p.line, fmt.Sprintf("%q : 解決できません\n", p.curToken.Literal))
+			p.parserError(p.line, fmt.Sprintf("%q : 解決できません\n", p.curToken.Literal))
 			code = nil
 		}
 		if code == nil {
@@ -232,7 +232,7 @@ func (p *Parser) LabelToAddress(code []opcode.Opcode) ([]opcode.Opcode, error) {
 			addr, ok := p.symbolTable.Resolve(op.AddrLabel)
 			if !ok {
 				p.parserError(p.line, fmt.Sprintf("%qは解決できません", op.AddrLabel))
-				return nil, nil
+				return nil, fmt.Errorf("Labelが解決できません")
 			}
 			code[i].Addr = addr.Address
 		}
@@ -258,7 +258,7 @@ func (p *Parser) DCStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Addr = addr
 	case token.STRING:
 		if p.peekToken.Literal == "nil" {
-			p.parserError(p.line,fmt.Sprintf("%q"))
+			p.parserError(p.line, fmt.Sprintf("%q", p.peekToken.Literal))
 			return nil
 		}
 	default:
@@ -316,6 +316,10 @@ func (p *Parser) DSStatment(code *opcode.Opcode) *opcode.Opcode {
 // STARTStatment `Label START` - [実行番地]
 // START プログラムの実行番地を定義
 func (p *Parser) STARTStatment(code *opcode.Opcode) *opcode.Opcode {
+	if code.Label == nil {
+		p.parserError(p.line, fmt.Sprintf("STARTにラベルがありません。対象 : %q", p.peekToken.Literal))
+		return nil
+	}
 	sy, ok := p.symbolTable.Resolve(code.Label.Label)
 	if !ok {
 		p.parserError(p.line, fmt.Sprintf("STARTにラベルがありません。対象 : %q", p.peekToken.Literal))

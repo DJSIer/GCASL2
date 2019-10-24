@@ -11,10 +11,8 @@ import (
 
 func main() {
 	lex := lexer.New(`
-	PRG START
-		LD GR1,GR2 ;わーい
-		LD GR1,GR2
-	END
+	ADDA GR2,E
+	D DC 1
 	`)
 
 	p := parser.New(lex)
