@@ -284,6 +284,8 @@ func (p *Parser) DCStatment(code *opcode.Opcode) *opcode.Opcode {
 				return nil
 			}
 			code.Addr = addr
+		case token.STRING:
+			code.Addr = p.stringToAddress(code, p.peekToken.Literal)
 		default:
 			p.parserError(p.line, fmt.Sprintf("数値でなければいけません。対象 : %q", p.peekToken.Literal))
 			return nil
@@ -1728,8 +1730,12 @@ func (p *Parser) indexRegisterParse(code *opcode.Opcode) (*opcode.Opcode, error)
 }
 func (p *Parser) stringToAddress(code *opcode.Opcode, str string) uint16 {
 	code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Label: code.Label, Token: code.Token}
-	st := str[1 : len(str)-1]
-
+	var st string
+	if len(str)-1 < 0 {
+		st = ""
+	} else {
+		st = str[1 : len(str)-1]
+	}
 	for i := 0; i < len(st)-1; i++ {
 		addr, _ := token.LookupLetter(st[i])
 		code.Addr = uint16(addr)
@@ -1737,6 +1743,11 @@ func (p *Parser) stringToAddress(code *opcode.Opcode, str string) uint16 {
 		p.byteAdress++
 		code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Token: code.Token}
 	}
-	addr, _ := token.LookupLetter(st[len(st)-1])
+	var addr uint8
+	if len(st)-1 < 0 {
+		addr = 0x00
+	} else {
+		addr, _ = token.LookupLetter(st[len(st)-1])
+	}
 	return uint16(addr)
 }

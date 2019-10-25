@@ -70,8 +70,14 @@ func (l *Lexer) NextToken() token.Token {
 			}
 		}
 	case '\'':
-		tok.Literal = l.readCaslLetter()
-		tok.Type = token.STRING
+		if l.peekChar() == '\'' {
+			tok.Literal = "''"
+			tok.Type = token.STRING
+		} else {
+			l.readChar()
+			tok.Literal = "'" + l.readCaslLetter()
+			tok.Type = token.STRING
+		}
 		return tok
 	case ';':
 		for l.ch != ' ' && l.ch != '\t' && l.ch != '\n' && l.ch != '\r' {
@@ -129,8 +135,14 @@ func (l *Lexer) readHexNumber() string {
 }
 func (l *Lexer) readCaslLetter() string {
 	position := l.position
-
 	for isCaslLetter(l.ch) {
+		if l.ch == '\'' && l.peekChar() == '\'' {
+			l.readChar()
+		}
+		if l.ch == '\'' {
+			l.readChar()
+			break
+		}
 		l.readChar()
 	}
 	return l.input[position:l.position]
