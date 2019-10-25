@@ -371,7 +371,7 @@ func (p *Parser) LDStatment(code *opcode.Opcode) *opcode.Opcode {
 	case token.INT:
 		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
-			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q", p.curToken.Literal))
+			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。\n 0~65535が有効な数値です。対象 : %q", p.curToken.Literal))
 			return nil
 		}
 		code.Addr = uint16(addr)
