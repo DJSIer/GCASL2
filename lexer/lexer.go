@@ -84,7 +84,11 @@ func (l *Lexer) NextToken() token.Token {
 	default:
 		if isLetter(l.ch) {
 			tok.Literal = l.readInst()
-			tok.Type = token.LookupInst(tok.Literal)
+			if isUppercaseLetter(tok.Literal) {
+				tok.Type = token.LookupInst(tok.Literal)
+			} else {
+				tok.Type = token.ILLEGAL
+			}
 			return tok
 		} else if isDegit(l.ch) {
 			tok.Literal = l.readNumber()
@@ -151,10 +155,19 @@ func isLetter(ch byte) bool {
 func isLetterDegit(ch byte) bool {
 	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || '0' <= ch && ch <= '9'
 }
+func isUppercaseLetter(str string) bool {
+	for _, s := range str {
+		if 'a' <= s && s <= 'z' {
+			return false
+		}
+	}
+	return true
+}
 func isCaslLetter(ch byte) bool {
 	_, ok := token.LookupLetter(ch)
 	return ok
 }
+
 func newToken(tokenType token.TokenType, ch byte) token.Token {
 	return token.Token{Type: tokenType, Literal: string(ch)}
 }

@@ -369,9 +369,9 @@ func (p *Parser) LDStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 64)
+		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
-			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q", p.curToken.Literal))
+			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。\n 0~65535が有効な数値です。対象 : %q", p.curToken.Literal))
 			return nil
 		}
 		code.Addr = uint16(addr)
@@ -434,7 +434,7 @@ func (p *Parser) LADStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 64)
+		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -523,10 +523,11 @@ func (p *Parser) ADDAStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
+	r1 := p.curToken.Literal
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
 	// Next Token is ','
 	if !p.peekTokenIs(token.COMMA) {
-		p.parserError(p.line, fmt.Sprintf("%qがありません。対象 : %q\n", ",", p.peekToken.Literal))
+		p.parserError(p.line, fmt.Sprintf("%s %s の後にカンマがありません。", code.Token.Literal, r1))
 		return nil
 	}
 	p.nextToken()
@@ -540,7 +541,7 @@ func (p *Parser) ADDAStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 64)
+		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -594,10 +595,11 @@ func (p *Parser) SUBAStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
+	r1 := p.curToken.Literal
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
 	// Next Token is ','
 	if !p.peekTokenIs(token.COMMA) {
-		p.parserError(p.line, fmt.Sprintf("%qがありません。対象 : %q\n", ",", p.peekToken.Literal))
+		p.parserError(p.line, fmt.Sprintf("%s %s の後にカンマがありません。", code.Token.Literal, r1))
 		return nil
 	}
 	p.nextToken()
@@ -677,10 +679,11 @@ func (p *Parser) ADDLStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
+	r1 := p.curToken.Literal
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
 	// Next Token is ','
 	if !p.peekTokenIs(token.COMMA) {
-		p.parserError(p.line, fmt.Sprintf("%qがありません。対象 : %q\n", ",", p.peekToken.Literal))
+		p.parserError(p.line, fmt.Sprintf("%s %s の後にカンマがありません。", code.Token.Literal, r1))
 		return nil
 	}
 	p.nextToken()
@@ -761,10 +764,11 @@ func (p *Parser) SUBLStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
+	r1 := p.curToken.Literal
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
 	// Next Token is ','
 	if !p.peekTokenIs(token.COMMA) {
-		p.parserError(p.line, fmt.Sprintf("%qがありません。対象 : %q\n", ",", p.peekToken.Literal))
+		p.parserError(p.line, fmt.Sprintf("%s %s の後にカンマがありません。", code.Token.Literal, r1))
 		return nil
 	}
 	p.nextToken()
@@ -834,10 +838,11 @@ func (p *Parser) ANDStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
+	r1 := p.curToken.Literal
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
 	// Next Token is ','
 	if !p.peekTokenIs(token.COMMA) {
-		p.parserError(p.line, fmt.Sprintf("%qがありません。対象 : %q\n", ",", p.peekToken.Literal))
+		p.parserError(p.line, fmt.Sprintf("%s %s の後にカンマがありません。", code.Token.Literal, r1))
 		return nil
 	}
 	p.nextToken()
@@ -901,10 +906,11 @@ func (p *Parser) ORStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
+	r1 := p.curToken.Literal
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
 	// Next Token is ','
 	if !p.peekTokenIs(token.COMMA) {
-		p.parserError(p.line, fmt.Sprintf("%qがありません。対象 : %q\n", ",", p.peekToken.Literal))
+		p.parserError(p.line, fmt.Sprintf("%s %s の後にカンマがありません。", code.Token.Literal, r1))
 		return nil
 	}
 	p.nextToken()
@@ -970,10 +976,11 @@ func (p *Parser) XORStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
+	r1 := p.curToken.Literal
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
 	// Next Token is ','
 	if !p.peekTokenIs(token.COMMA) {
-		p.parserError(p.line, fmt.Sprintf("%qがありません。対象 : %q\n", ",", p.peekToken.Literal))
+		p.parserError(p.line, fmt.Sprintf("%s %s の後にカンマがありません。", code.Token.Literal, r1))
 		return nil
 	}
 	p.nextToken()
@@ -1037,10 +1044,11 @@ func (p *Parser) CPAStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
+	r1 := p.curToken.Literal
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
 	// Next Token is ','
 	if !p.peekTokenIs(token.COMMA) {
-		p.parserError(p.line, fmt.Sprintf("%qがありません。対象 : %q\n", ",", p.peekToken.Literal))
+		p.parserError(p.line, fmt.Sprintf("%s %s の後にカンマがありません。", code.Token.Literal, r1))
 		return nil
 	}
 	p.nextToken()
@@ -1104,10 +1112,11 @@ func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
+	r1 := p.curToken.Literal
 	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
 	// Next Token is ','
 	if !p.peekTokenIs(token.COMMA) {
-		p.parserError(p.line, fmt.Sprintf("%qがありません。対象 : %q\n", ",", p.peekToken.Literal))
+		p.parserError(p.line, fmt.Sprintf("%s %s の後にカンマがありません。", code.Token.Literal, r1))
 		return nil
 	}
 	p.nextToken()
