@@ -256,10 +256,7 @@ func (p *Parser) DCStatment(code *opcode.Opcode) *opcode.Opcode {
 		}
 		code.Addr = addr
 	case token.STRING:
-		if p.peekToken.Literal == "nil" {
-			p.parserError(p.line, fmt.Sprintf("%q", p.peekToken.Literal))
-			return nil
-		}
+		code.Addr = p.stringToAddress(code, p.peekToken.Literal)
 	default:
 		p.parserError(p.line, fmt.Sprintf("数値でなければいけません。対象 : %q", p.peekToken.Literal))
 		return nil
@@ -1728,4 +1725,18 @@ func (p *Parser) indexRegisterParse(code *opcode.Opcode) (*opcode.Opcode, error)
 	p.nextToken()
 	code.Code |= uint16(registerNumber[p.curToken.Literal])
 	return code, nil
+}
+func (p *Parser) stringToAddress(code *opcode.Opcode, str string) uint16 {
+	code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Label: code.Label, Token: code.Token}
+	st := str[1 : len(str)-1]
+
+	for i := 0; i < len(st)-1; i++ {
+		addr, _ := token.LookupLetter(st[i])
+		code.Addr = uint16(addr)
+		p.Excode = append(p.Excode, *code)
+		p.byteAdress++
+		code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Token: code.Token}
+	}
+	addr, _ := token.LookupLetter(st[len(st)-1])
+	return uint16(addr)
 }
