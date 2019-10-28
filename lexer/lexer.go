@@ -2,6 +2,7 @@ package lexer
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/DJSIer/GCASL2/token"
 )
@@ -138,14 +139,13 @@ func (l *Lexer) readCaslLetter() string {
 	for isCaslLetter(l.ch) {
 		if l.ch == '\'' && l.peekChar() == '\'' {
 			l.readChar()
-		}
-		if l.ch == '\'' {
+		} else if l.ch == '\'' {
 			l.readChar()
 			break
 		}
 		l.readChar()
 	}
-	return l.input[position:l.position]
+	return strings.Replace(l.input[position:l.position], "''", "'", -1)
 }
 func (l *Lexer) peekChar() byte {
 	if l.readPosition >= len(l.input) {
