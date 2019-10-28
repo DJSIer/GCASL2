@@ -242,6 +242,8 @@ func (p *Parser) LabelToAddress(code []opcode.Opcode) ([]opcode.Opcode, error) {
 	}
 	return code, nil
 }
+
+//LiteralToMemory =literal のメモリ追加
 func (p *Parser) LiteralToMemory(code []opcode.Opcode) ([]opcode.Opcode, error) {
 	for _, l := range p.LiteralDC {
 		switch l.Type {
@@ -489,7 +491,8 @@ func (p *Parser) LADStatment(code *opcode.Opcode) *opcode.Opcode {
 		return nil
 	}
 
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) &&
+		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("LAD %s,%q の値が数値・ラベルではありません。対象 : %q", r1, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
@@ -502,7 +505,12 @@ func (p *Parser) LADStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 	case token.HEX:
 		addr, err := p.hexToAddress(p.curToken.Literal)
@@ -540,7 +548,8 @@ func (p *Parser) STStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.parserError(p.line, fmt.Sprintf("%s %s の後にカンマがありません。", code.Token.Literal, r1))
 		return nil
 	}
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) &&
+		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("%s %s,%q の値が数値・ラベルではありません。対象 : %q", code.Token.Literal, r1, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
@@ -553,7 +562,12 @@ func (p *Parser) STStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 	case token.HEX:
 		addr, err := p.hexToAddress(p.curToken.Literal)
@@ -594,7 +608,8 @@ func (p *Parser) ADDAStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) &&
+		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -617,7 +632,12 @@ func (p *Parser) ADDAStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x24
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 		if !p.peekTokenIs(token.COMMA) {
 			code.Code |= uint16(code.Op) << 8
@@ -666,7 +686,8 @@ func (p *Parser) SUBAStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) &&
+		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -694,7 +715,12 @@ func (p *Parser) SUBAStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x25
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 		if !p.peekTokenIs(token.COMMA) {
 			code.Code |= uint16(code.Op) << 8
@@ -750,7 +776,8 @@ func (p *Parser) ADDLStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) &&
+		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -779,7 +806,12 @@ func (p *Parser) ADDLStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x26
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 		if !p.peekTokenIs(token.COMMA) {
 			code.Code |= uint16(code.Op) << 8
@@ -835,7 +867,8 @@ func (p *Parser) SUBLStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) &&
+		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -860,7 +893,12 @@ func (p *Parser) SUBLStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x27
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 		if !p.peekTokenIs(token.COMMA) {
 			code.Code |= uint16(code.Op) << 8
@@ -909,7 +947,8 @@ func (p *Parser) ANDStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) &&
+		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -932,7 +971,12 @@ func (p *Parser) ANDStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x34
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 		if !p.peekTokenIs(token.COMMA) {
 			code.Code |= uint16(code.Op) << 8
@@ -977,7 +1021,8 @@ func (p *Parser) ORStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) &&
+		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1002,7 +1047,12 @@ func (p *Parser) ORStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x35
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 		if !p.peekTokenIs(token.COMMA) {
 			code.Code |= uint16(code.Op) << 8
@@ -1047,7 +1097,8 @@ func (p *Parser) XORStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) &&
+		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1070,7 +1121,12 @@ func (p *Parser) XORStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x36
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 		if !p.peekTokenIs(token.COMMA) {
 			code.Code |= uint16(code.Op) << 8
@@ -1115,7 +1171,8 @@ func (p *Parser) CPAStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) &&
+		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1138,7 +1195,12 @@ func (p *Parser) CPAStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x44
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 		if !p.peekTokenIs(token.COMMA) {
 			code.Code |= uint16(code.Op) << 8
@@ -1183,7 +1245,8 @@ func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) &&
+		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1208,7 +1271,12 @@ func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x45
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 		if !p.peekTokenIs(token.COMMA) {
 			code.Code |= uint16(code.Op) << 8
@@ -1250,7 +1318,7 @@ func (p *Parser) SLAStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1269,7 +1337,12 @@ func (p *Parser) SLAStatment(code *opcode.Opcode) *opcode.Opcode {
 		if err != nil {
 			return nil
 		}
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 		if !p.peekTokenIs(token.COMMA) {
 			code.Code |= uint16(code.Op) << 8
@@ -1310,7 +1383,7 @@ func (p *Parser) SRAStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1330,7 +1403,12 @@ func (p *Parser) SRAStatment(code *opcode.Opcode) *opcode.Opcode {
 		if err != nil {
 			return nil
 		}
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 		if !p.peekTokenIs(token.COMMA) {
 			code.Code |= uint16(code.Op) << 8
@@ -1371,7 +1449,7 @@ func (p *Parser) SLLStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1390,7 +1468,12 @@ func (p *Parser) SLLStatment(code *opcode.Opcode) *opcode.Opcode {
 		if err != nil {
 			return nil
 		}
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 		if !p.peekTokenIs(token.COMMA) {
 			code.Code |= uint16(code.Op) << 8
@@ -1431,7 +1514,7 @@ func (p *Parser) SRLStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1450,7 +1533,12 @@ func (p *Parser) SRLStatment(code *opcode.Opcode) *opcode.Opcode {
 		if err != nil {
 			return nil
 		}
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 		if !p.peekTokenIs(token.COMMA) {
 			code.Code |= uint16(code.Op) << 8
@@ -1480,7 +1568,7 @@ func (p *Parser) SRLStatment(code *opcode.Opcode) *opcode.Opcode {
 // JMI adr, [,x];
 func (p *Parser) JMIStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x61, Code: 0x6100, Length: 2, Label: code.Label, Token: code.Token}
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1499,7 +1587,12 @@ func (p *Parser) JMIStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 	}
 	if !p.peekTokenIs(token.COMMA) {
@@ -1519,7 +1612,7 @@ func (p *Parser) JMIStatment(code *opcode.Opcode) *opcode.Opcode {
 // JNZ adr, [,x];
 func (p *Parser) JNZStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x62, Code: 0x6200, Length: 2, Label: code.Label, Token: code.Token}
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1538,7 +1631,12 @@ func (p *Parser) JNZStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 	}
 	if !p.peekTokenIs(token.COMMA) {
@@ -1558,7 +1656,7 @@ func (p *Parser) JNZStatment(code *opcode.Opcode) *opcode.Opcode {
 // JZE adr, [,x];
 func (p *Parser) JZEStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x63, Code: 0x6300, Length: 2, Label: code.Label, Token: code.Token}
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1577,7 +1675,12 @@ func (p *Parser) JZEStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 	}
 	if !p.peekTokenIs(token.COMMA) {
@@ -1597,7 +1700,7 @@ func (p *Parser) JZEStatment(code *opcode.Opcode) *opcode.Opcode {
 // JUMP adr, [,x];
 func (p *Parser) JUMPStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x64, Code: 0x6400, Length: 2, Label: code.Label, Token: code.Token}
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1616,7 +1719,12 @@ func (p *Parser) JUMPStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 	}
 	if !p.peekTokenIs(token.COMMA) {
@@ -1636,7 +1744,7 @@ func (p *Parser) JUMPStatment(code *opcode.Opcode) *opcode.Opcode {
 // JPL adr, [,x];
 func (p *Parser) JPLStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x65, Code: 0x6500, Length: 2, Label: code.Label, Token: code.Token}
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1655,7 +1763,12 @@ func (p *Parser) JPLStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 	}
 	if !p.peekTokenIs(token.COMMA) {
@@ -1675,7 +1788,7 @@ func (p *Parser) JPLStatment(code *opcode.Opcode) *opcode.Opcode {
 // JOV adr, [,x];
 func (p *Parser) JOVStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x66, Code: 0x6600, Length: 2, Label: code.Label, Token: code.Token}
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1694,7 +1807,12 @@ func (p *Parser) JOVStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 	}
 	if !p.peekTokenIs(token.COMMA) {
@@ -1714,7 +1832,7 @@ func (p *Parser) JOVStatment(code *opcode.Opcode) *opcode.Opcode {
 // PUSH adr, [,x];
 func (p *Parser) PUSHStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x70, Code: 0x7000, Length: 2, Label: code.Label, Token: code.Token}
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1733,7 +1851,12 @@ func (p *Parser) PUSHStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 	}
 	if !p.peekTokenIs(token.COMMA) {
