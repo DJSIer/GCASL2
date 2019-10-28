@@ -11,8 +11,7 @@ import (
 
 func main() {
 	lex := lexer.New(`
-	LD GR1,=1
-	DC 1
+	CALL 100
 	`)
 
 	p := parser.New(lex)

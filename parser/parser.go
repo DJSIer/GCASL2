@@ -83,6 +83,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.DS:    p.DSStatment,
 		token.DC:    p.DCStatment,
 		token.END:   p.ENDStatment,
+		token.CALL:  p.CALLStatment,
 	}
 	p.symbolTable = symbol.NewSymbolTable()
 	p.nextToken()
@@ -203,6 +204,8 @@ func (p *Parser) ParseProgram() ([]opcode.Opcode, error) {
 		case token.DC:
 			code = p.instSet[p.curToken.Type](code)
 		case token.END:
+			code = p.instSet[p.curToken.Type](code)
+		case token.CALL:
 			code = p.instSet[p.curToken.Type](code)
 		default:
 			p.parserError(p.line, fmt.Sprintf("%q : 解決できません\n", p.curToken.Literal))
@@ -355,6 +358,44 @@ func (p *Parser) ENDStatment(code *opcode.Opcode) *opcode.Opcode {
 //	   ;SP ← (SP) + 1
 func (p *Parser) RETStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x81, Code: 0x8100, Length: 1, Label: code.Label, Token: code.Token}
+	return code
+}
+
+// CALLStatment call subroutine
+func (p *Parser) CALLStatment(code *opcode.Opcode) *opcode.Opcode {
+	code = &opcode.Opcode{Op: 0x80, Code: 0x8000, Length: 2, Label: code.Label, Token: code.Token}
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
+		return nil
+	}
+	p.nextToken()
+	switch p.curToken.Type {
+	case token.INT:
+		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		if err != nil {
+			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
+			return nil
+		}
+		code.Addr = uint16(addr)
+	case token.HEX:
+		addr, err := p.hexToAddress(p.curToken.Literal)
+		if err != nil {
+			return nil
+		}
+		code.Addr = uint16(addr)
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+	}
+	if !p.peekTokenIs(token.COMMA) {
+		return code
+	}
+	p.nextToken()
+	if !p.peekTokenIs(token.REGISTER) {
+		p.parserError(p.line, fmt.Sprintf("レジスタではありません。対象 : %q\n", p.peekToken.Literal))
+		return nil
+	}
+	p.nextToken()
+	code.Code |= uint16(registerNumber[p.curToken.Literal])
 	return code
 }
 
