@@ -1416,7 +1416,7 @@ func (p *Parser) SRLStatment(code *opcode.Opcode) *opcode.Opcode {
 // JMIStatment Jump on Minus
 // JMI adr, [,x];
 func (p *Parser) JMIStatment(code *opcode.Opcode) *opcode.Opcode {
-	code = &opcode.Opcode{Op: 0x61, Code: 0x6100, Length: 2, Label: code.Label}
+	code = &opcode.Opcode{Op: 0x61, Code: 0x6100, Length: 2, Label: code.Label, Token: code.Token}
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
@@ -1455,7 +1455,7 @@ func (p *Parser) JMIStatment(code *opcode.Opcode) *opcode.Opcode {
 // JNZStatment Jump on non Zero
 // JNZ adr, [,x];
 func (p *Parser) JNZStatment(code *opcode.Opcode) *opcode.Opcode {
-	code = &opcode.Opcode{Op: 0x62, Code: 0x6200, Length: 2, Label: code.Label}
+	code = &opcode.Opcode{Op: 0x62, Code: 0x6200, Length: 2, Label: code.Label, Token: code.Token}
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
@@ -1494,7 +1494,7 @@ func (p *Parser) JNZStatment(code *opcode.Opcode) *opcode.Opcode {
 // JZEStatment Jump on Zero
 // JZE adr, [,x];
 func (p *Parser) JZEStatment(code *opcode.Opcode) *opcode.Opcode {
-	code = &opcode.Opcode{Op: 0x63, Code: 0x6300, Length: 2, Label: code.Label}
+	code = &opcode.Opcode{Op: 0x63, Code: 0x6300, Length: 2, Label: code.Label, Token: code.Token}
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
@@ -1689,7 +1689,7 @@ func (p *Parser) PUSHStatment(code *opcode.Opcode) *opcode.Opcode {
 // POPStatment PUSH
 // POP r;
 func (p *Parser) POPStatment(code *opcode.Opcode) *opcode.Opcode {
-	code = &opcode.Opcode{Op: 0x71, Code: 0x7100, Length: 1, Label: code.Label}
+	code = &opcode.Opcode{Op: 0x71, Code: 0x7100, Length: 1, Label: code.Label, Token: code.Token}
 	if !p.peekTokenIs(token.REGISTER) {
 		p.parserError(p.line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil

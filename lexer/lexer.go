@@ -59,8 +59,7 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Literal = "=" + l.readNumber()
 			tok.Type = token.EQINT
 			return tok
-		}
-		if l.peekChar() == '#' {
+		} else if l.peekChar() == '#' {
 			l.readChar()
 			if isHex(l.peekChar()) {
 				l.readChar()
@@ -69,16 +68,17 @@ func (l *Lexer) NextToken() token.Token {
 				fmt.Println(tok)
 				return tok
 			}
+		} else if l.peekChar() == '\'' {
+			l.readChar()
+			tok.Literal = "'=" + l.readCaslLetter()
+			tok.Type = token.EQSTRING
+			return tok
 		}
 	case '\'':
-		if l.peekChar() == '\'' {
-			tok.Literal = "''"
-			tok.Type = token.STRING
-		} else {
-			l.readChar()
-			tok.Literal = "'" + l.readCaslLetter()
-			tok.Type = token.STRING
-		}
+		l.readChar()
+		tok.Literal = "'" + l.readCaslLetter()
+		tok.Type = token.STRING
+
 		return tok
 	case ';':
 		for l.ch != ' ' && l.ch != '\t' && l.ch != '\n' && l.ch != '\r' {
