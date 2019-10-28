@@ -35,6 +35,7 @@ type Parser struct {
 	warnings    []string
 	instSet     map[token.TokenType]functype
 	Excode      []opcode.Opcode
+	LiteralDC   []token.Token
 	line        int //line number
 }
 
@@ -238,6 +239,22 @@ func (p *Parser) LabelToAddress(code []opcode.Opcode) ([]opcode.Opcode, error) {
 	}
 	return code, nil
 }
+func (p *Parser) LiteralToMemory(code []opcode.Opcode) ([]opcode.Opcode, error) {
+	for _, l := range p.LiteralDC {
+		switch l.Type {
+		case token.EQINT:
+			addr, err := strconv.ParseUint(strings.Replace(l.Literal, "=", "", -1), 0, 16)
+			if err != nil {
+				p.parserError(0, fmt.Sprintf("%q : 解決できません\n", l.Literal))
+				return code, fmt.Errorf("リテラル解決失敗")
+			}
+			code = append(code, opcode.Opcode{Addr: uint16(addr), Length: 1})
+			p.symbolTable.LiteralAddressSet(l.Literal, p.byteAdress)
+			p.byteAdress++
+		}
+	}
+	return code, nil
+}
 
 //DCStatment 定数定義
 func (p *Parser) DCStatment(code *opcode.Opcode) *opcode.Opcode {
@@ -359,7 +376,7 @@ func (p *Parser) LDStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
 		p.parserError(p.line, fmt.Sprintf("LD %s,%q の値が数値・レジスタ・ラベルではありません。対象 : %q", r1, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
@@ -393,7 +410,12 @@ func (p *Parser) LDStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x14
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL:
+	case token.LABEL, token.EQINT:
+		if token.EQINT == p.curToken.Type {
+			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+				p.LiteralDC = append(p.LiteralDC, p.curToken)
+			}
+		}
 		code.AddrLabel = p.curToken.Literal
 		if !p.peekTokenIs(token.COMMA) {
 			code.Code |= uint16(code.Op) << 8

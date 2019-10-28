@@ -70,6 +70,7 @@ func (l *Lexer) NextToken() token.Token {
 			}
 		} else if l.peekChar() == '\'' {
 			l.readChar()
+			l.readChar()
 			tok.Literal = "'=" + l.readCaslLetter()
 			tok.Type = token.EQSTRING
 			return tok
