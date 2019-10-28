@@ -248,7 +248,7 @@ func (p *Parser) LiteralToMemory(code []opcode.Opcode) ([]opcode.Opcode, error) 
 				p.parserError(0, fmt.Sprintf("%q : 解決できません\n", l.Literal))
 				return code, fmt.Errorf("リテラル解決失敗")
 			}
-			code = append(code, opcode.Opcode{Addr: uint16(addr), Length: 1})
+			code = append(code, opcode.Opcode{Addr: uint16(addr), Length: 1, Token: token.Token{Literal: "DC"}})
 			p.symbolTable.LiteralAddressSet(l.Literal, p.byteAdress)
 			p.byteAdress++
 		}
