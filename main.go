@@ -11,7 +11,9 @@ import (
 
 func main() {
 	lex := lexer.New(`
-	LD GR1,='A'
+	A LD GR1,=1
+	LD GR1,=2
+	END
 	`)
 
 	p := parser.New(lex)
@@ -23,6 +25,7 @@ func main() {
 		fmt.Println("{\"result\":\"NG\",\"error\" :" + buf.String() + "}")
 		return
 	}
+	code, err = p.LiteralToMemory(code)
 	code, err = p.LabelToAddress(code)
 	if err != nil {
 		var buf bytes.Buffer
