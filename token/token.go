@@ -20,6 +20,7 @@ const (
 	HEX       = "HEX"
 	EQHEX     = "EQHEX"
 	STRING    = "STRING"
+	EQSTRING  = "EQSTRING"
 	SHARP     = "#"
 	COMMA     = ","
 	SEMICOLON = ":"
