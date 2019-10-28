@@ -12,6 +12,7 @@ import (
 func main() {
 	lex := lexer.New(`
 	LAD GR1,=1
+	DC 'A''','A'',A'''
 	`)
 
 	p := parser.New(lex)
