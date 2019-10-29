@@ -11,7 +11,8 @@ import (
 
 func main() {
 	lex := lexer.New(`
-	SVC #1000
+	IN A,A
+	A DC 10
 	`)
 
 	p := parser.New(lex)
