@@ -11,22 +11,7 @@ import (
 
 func main() {
 	lex := lexer.New(`
-	;   ra-men
-	OVERFLOW START
-			LAD     GR0, 32765
-			LAD     GR1, 1
-	LOOP0   ADDA    GR0, GR1
-			JOV     OUTLOOP0
-			JUMP    LOOP0
-	OUTLOOP0
-			LAD     GR0, 32767
-			LAD     GR1, 1
-	LOOP1   SUBA    GR0, GR1
-			JOV     OUTLOOP1
-			JUMP    LOOP1
-	OUTLOOP1
-			RET
-			END
+	SVC #1000
 	`)
 
 	p := parser.New(lex)
