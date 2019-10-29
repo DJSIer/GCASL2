@@ -11,6 +11,7 @@ import (
 
 func main() {
 	lex := lexer.New(`
+	;   ra-men
 	OVERFLOW START
 			LAD     GR0, 32765
 			LAD     GR1, 1
