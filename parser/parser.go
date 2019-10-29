@@ -256,6 +256,15 @@ func (p *Parser) LiteralToMemory(code []opcode.Opcode) ([]opcode.Opcode, error) 
 			code = append(code, opcode.Opcode{Addr: uint16(addr), Length: 1, Token: token.Token{Literal: "DC"}})
 			p.symbolTable.LiteralAddressSet(l.Literal, p.byteAdress)
 			p.byteAdress++
+		case token.EQHEX:
+			addr, err := strconv.ParseUint(strings.Replace(l.Literal, "=#", "", -1), 16, 16)
+			if err != nil {
+				p.parserError(0, fmt.Sprintf("%q : 解決できません\n", l.Literal))
+				return code, fmt.Errorf("リテラル解決失敗")
+			}
+			code = append(code, opcode.Opcode{Addr: uint16(addr), Length: 1, Token: token.Token{Literal: "DC"}})
+			p.symbolTable.LiteralAddressSet(l.Literal, p.byteAdress)
+			p.byteAdress++
 		}
 	}
 	return code, nil
@@ -419,7 +428,8 @@ func (p *Parser) LDStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) &&
+		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("LD %s,%q の値が数値・レジスタ・ラベルではありません。対象 : %q", r1, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
@@ -428,7 +438,7 @@ func (p *Parser) LDStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。\n 0~65535が有効な数値です。対象 : %q", p.curToken.Literal))
 			return nil
@@ -453,8 +463,8 @@ func (p *Parser) LDStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x14
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -492,21 +502,21 @@ func (p *Parser) LADStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) &&
-		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("LAD %s,%q の値が数値・ラベルではありません。対象 : %q", r1, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
 		}
 		code.Addr = uint16(addr)
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -549,21 +559,21 @@ func (p *Parser) STStatment(code *opcode.Opcode) *opcode.Opcode {
 		return nil
 	}
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) &&
-		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("%s %s,%q の値が数値・ラベルではありません。対象 : %q", code.Token.Literal, r1, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("%s %s,%q の数値が適正ではありません。\n 数値は0~65535までです。\n対象 : %q\n", code.Token.Literal, r1, p.curToken.Literal, p.curToken.Literal))
 			return nil
 		}
 		code.Addr = uint16(addr)
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -609,7 +619,8 @@ func (p *Parser) ADDAStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) &&
-		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) &&
+		!p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -618,7 +629,7 @@ func (p *Parser) ADDAStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -632,8 +643,8 @@ func (p *Parser) ADDAStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x24
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -687,7 +698,8 @@ func (p *Parser) SUBAStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) &&
-		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) &&
+		!p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -697,7 +709,7 @@ func (p *Parser) SUBAStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -715,8 +727,8 @@ func (p *Parser) SUBAStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x25
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -777,7 +789,8 @@ func (p *Parser) ADDLStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) &&
-		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) &&
+		!p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -788,7 +801,7 @@ func (p *Parser) ADDLStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -806,8 +819,8 @@ func (p *Parser) ADDLStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x26
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -868,7 +881,8 @@ func (p *Parser) SUBLStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) &&
-		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) &&
+		!p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -879,7 +893,7 @@ func (p *Parser) SUBLStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -893,8 +907,8 @@ func (p *Parser) SUBLStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x27
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -948,7 +962,8 @@ func (p *Parser) ANDStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) &&
-		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) &&
+		!p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -957,7 +972,7 @@ func (p *Parser) ANDStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -971,8 +986,8 @@ func (p *Parser) ANDStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x34
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1022,7 +1037,8 @@ func (p *Parser) ORStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) &&
-		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) &&
+		!p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1033,7 +1049,7 @@ func (p *Parser) ORStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1047,8 +1063,8 @@ func (p *Parser) ORStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x35
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1098,7 +1114,8 @@ func (p *Parser) XORStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) &&
-		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) &&
+		!p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1107,7 +1124,7 @@ func (p *Parser) XORStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1121,8 +1138,8 @@ func (p *Parser) XORStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x36
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1172,7 +1189,8 @@ func (p *Parser) CPAStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) &&
-		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) &&
+		!p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1181,7 +1199,7 @@ func (p *Parser) CPAStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1195,8 +1213,8 @@ func (p *Parser) CPAStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x44
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1246,7 +1264,8 @@ func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) &&
-		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+		!p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) &&
+		!p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・レジスタ・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1257,7 +1276,7 @@ func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1271,8 +1290,8 @@ func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Op = 0x45
 		code.Length = 1
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1318,7 +1337,8 @@ func (p *Parser) SLAStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) &&
+		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1327,7 +1347,7 @@ func (p *Parser) SLAStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1337,8 +1357,8 @@ func (p *Parser) SLAStatment(code *opcode.Opcode) *opcode.Opcode {
 		if err != nil {
 			return nil
 		}
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1383,7 +1403,8 @@ func (p *Parser) SRAStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) &&
+		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1392,7 +1413,7 @@ func (p *Parser) SRAStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1403,8 +1424,8 @@ func (p *Parser) SRAStatment(code *opcode.Opcode) *opcode.Opcode {
 		if err != nil {
 			return nil
 		}
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1449,7 +1470,8 @@ func (p *Parser) SLLStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) &&
+		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1458,7 +1480,7 @@ func (p *Parser) SLLStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1468,8 +1490,8 @@ func (p *Parser) SLLStatment(code *opcode.Opcode) *opcode.Opcode {
 		if err != nil {
 			return nil
 		}
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1514,7 +1536,8 @@ func (p *Parser) SRLStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) &&
+		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
@@ -1523,7 +1546,7 @@ func (p *Parser) SRLStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1533,8 +1556,8 @@ func (p *Parser) SRLStatment(code *opcode.Opcode) *opcode.Opcode {
 		if err != nil {
 			return nil
 		}
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1568,14 +1591,15 @@ func (p *Parser) SRLStatment(code *opcode.Opcode) *opcode.Opcode {
 // JMI adr, [,x];
 func (p *Parser) JMIStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x61, Code: 0x6100, Length: 2, Label: code.Label, Token: code.Token}
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) &&
+		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1587,8 +1611,8 @@ func (p *Parser) JMIStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1612,14 +1636,15 @@ func (p *Parser) JMIStatment(code *opcode.Opcode) *opcode.Opcode {
 // JNZ adr, [,x];
 func (p *Parser) JNZStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x62, Code: 0x6200, Length: 2, Label: code.Label, Token: code.Token}
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) &&
+		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1631,8 +1656,8 @@ func (p *Parser) JNZStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1656,14 +1681,15 @@ func (p *Parser) JNZStatment(code *opcode.Opcode) *opcode.Opcode {
 // JZE adr, [,x];
 func (p *Parser) JZEStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x63, Code: 0x6300, Length: 2, Label: code.Label, Token: code.Token}
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) &&
+		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1675,8 +1701,8 @@ func (p *Parser) JZEStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1700,14 +1726,15 @@ func (p *Parser) JZEStatment(code *opcode.Opcode) *opcode.Opcode {
 // JUMP adr, [,x];
 func (p *Parser) JUMPStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x64, Code: 0x6400, Length: 2, Label: code.Label, Token: code.Token}
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) &&
+		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1719,8 +1746,8 @@ func (p *Parser) JUMPStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1744,14 +1771,15 @@ func (p *Parser) JUMPStatment(code *opcode.Opcode) *opcode.Opcode {
 // JPL adr, [,x];
 func (p *Parser) JPLStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x65, Code: 0x6500, Length: 2, Label: code.Label, Token: code.Token}
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) &&
+		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1763,8 +1791,8 @@ func (p *Parser) JPLStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1788,14 +1816,15 @@ func (p *Parser) JPLStatment(code *opcode.Opcode) *opcode.Opcode {
 // JOV adr, [,x];
 func (p *Parser) JOVStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x66, Code: 0x6600, Length: 2, Label: code.Label, Token: code.Token}
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) &&
+		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1807,8 +1836,8 @@ func (p *Parser) JOVStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1832,14 +1861,15 @@ func (p *Parser) JOVStatment(code *opcode.Opcode) *opcode.Opcode {
 // PUSH adr, [,x];
 func (p *Parser) PUSHStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x70, Code: 0x7000, Length: 2, Label: code.Label, Token: code.Token}
-	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) && !p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) {
+	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.LABEL) &&
+		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
 		p.parserError(p.line, fmt.Sprintf("数値・ラベルではありません。対象 : %q\n", p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1851,8 +1881,8 @@ func (p *Parser) PUSHStatment(code *opcode.Opcode) *opcode.Opcode {
 			return nil
 		}
 		code.Addr = uint16(addr)
-	case token.LABEL, token.EQINT:
-		if token.EQINT == p.curToken.Type {
+	case token.LABEL, token.EQINT, token.EQHEX:
+		if token.LABEL != p.curToken.Type {
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
