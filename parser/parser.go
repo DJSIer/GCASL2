@@ -438,7 +438,7 @@ func (p *Parser) LDStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。\n 0~65535が有効な数値です。対象 : %q", p.curToken.Literal))
 			return nil
@@ -509,7 +509,7 @@ func (p *Parser) LADStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -566,7 +566,7 @@ func (p *Parser) STStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("%s %s,%q の数値が適正ではありません。\n 数値は0~65535までです。\n対象 : %q\n", code.Token.Literal, r1, p.curToken.Literal, p.curToken.Literal))
 			return nil
@@ -629,7 +629,7 @@ func (p *Parser) ADDAStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -709,7 +709,7 @@ func (p *Parser) SUBAStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -801,7 +801,7 @@ func (p *Parser) ADDLStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -893,7 +893,7 @@ func (p *Parser) SUBLStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -972,7 +972,7 @@ func (p *Parser) ANDStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1049,7 +1049,7 @@ func (p *Parser) ORStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1124,7 +1124,7 @@ func (p *Parser) XORStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1199,7 +1199,7 @@ func (p *Parser) CPAStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1276,7 +1276,7 @@ func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1347,7 +1347,7 @@ func (p *Parser) SLAStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1413,7 +1413,7 @@ func (p *Parser) SRAStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1480,7 +1480,7 @@ func (p *Parser) SLLStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1546,7 +1546,7 @@ func (p *Parser) SRLStatment(code *opcode.Opcode) *opcode.Opcode {
 	code.Length = 2
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1599,7 +1599,7 @@ func (p *Parser) JMIStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1644,7 +1644,7 @@ func (p *Parser) JNZStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1689,7 +1689,7 @@ func (p *Parser) JZEStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1734,7 +1734,7 @@ func (p *Parser) JUMPStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1779,7 +1779,7 @@ func (p *Parser) JPLStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1824,7 +1824,7 @@ func (p *Parser) JOVStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
@@ -1869,7 +1869,7 @@ func (p *Parser) PUSHStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	switch p.curToken.Type {
 	case token.INT:
-		addr, err := strconv.ParseUint(p.curToken.Literal, 0, 16)
+		addr, err := strconv.ParseInt(p.curToken.Literal, 0, 16)
 		if err != nil {
 			p.parserError(p.line, fmt.Sprintf("数値が適正ではありません。対象 : %q\n", p.curToken.Literal))
 			return nil
