@@ -85,6 +85,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.END:   p.ENDStatment,
 		token.CALL:  p.CALLStatment,
 		token.SVC:   p.SVCStatment,
+		token.IN:    p.INStatment,
 	}
 	p.symbolTable = symbol.NewSymbolTable()
 	p.nextToken()
@@ -209,6 +210,8 @@ func (p *Parser) ParseProgram() ([]opcode.Opcode, error) {
 		case token.CALL:
 			code = p.instSet[p.curToken.Type](code)
 		case token.SVC:
+			code = p.instSet[p.curToken.Type](code)
+		case token.IN:
 			code = p.instSet[p.curToken.Type](code)
 		default:
 			p.parserError(p.line, fmt.Sprintf("%q : 解決できません\n", p.curToken.Literal))
@@ -342,6 +345,50 @@ func (p *Parser) DSStatment(code *opcode.Opcode) *opcode.Opcode {
 		return nil
 	}
 	code.Length = int(Length)
+	return code
+}
+
+//INStatment 入力装置から文字データを入力
+func (p *Parser) INStatment(code *opcode.Opcode) *opcode.Opcode {
+	var inStatmentCode []opcode.Opcode
+	code = &opcode.Opcode{Op: 0x70, Code: 0x7001, Length: 2, Token: token.Token{Literal: "PUSH"}}
+	inStatmentCode = append(inStatmentCode, *code)
+	code = &opcode.Opcode{Op: 0x70, Code: 0x7002, Length: 2, Token: token.Token{Literal: "PUSH"}}
+	inStatmentCode = append(inStatmentCode, *code)
+	if !p.peekTokenIs(token.LABEL) {
+		return nil
+	}
+	p.nextToken()
+	code = &opcode.Opcode{Op: 0x12, Code: 0x1210, Length: 2, Token: token.Token{Literal: "LAD"}}
+	switch p.curToken.Type {
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+	}
+	inStatmentCode = append(inStatmentCode, *code)
+	if !p.peekTokenIs(token.COMMA) {
+		return nil
+	}
+	p.nextToken()
+	code = &opcode.Opcode{Op: 0x12, Code: 0x1220, Length: 2, Token: token.Token{Literal: "LAD"}}
+	if !p.peekTokenIs(token.LABEL) {
+		return nil
+	}
+	p.nextToken()
+	switch p.curToken.Type {
+	case token.LABEL:
+		code.AddrLabel = p.curToken.Literal
+	}
+	inStatmentCode = append(inStatmentCode, *code)
+	code = &opcode.Opcode{Op: 0xF0, Code: 0xF000, Length: 2, Addr: 0x703A, Token: token.Token{Literal: "SVC"}}
+	inStatmentCode = append(inStatmentCode, *code)
+	code = &opcode.Opcode{Op: 0x71, Code: 0x7120, Length: 1, Token: token.Token{Literal: "POP"}}
+	inStatmentCode = append(inStatmentCode, *code)
+	//p.byteAdress += uint16(code.Length)
+	for _, s := range inStatmentCode {
+		p.Excode = append(p.Excode, s)
+		p.byteAdress += uint16(s.Length)
+	}
+	code = &opcode.Opcode{Op: 0x71, Code: 0x7110, Length: 1, Token: token.Token{Literal: "POP"}}
 	return code
 }
 
