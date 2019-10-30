@@ -17,7 +17,7 @@ type Lexer struct {
 
 // New CASL2Lexer init
 func New(input string) *Lexer {
-	l := &Lexer{input: input}
+	l := &Lexer{input: input, line: 1}
 	l.readChar()
 	return l
 }
