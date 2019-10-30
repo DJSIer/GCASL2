@@ -12,6 +12,7 @@ type Lexer struct {
 	position     int
 	readPosition int
 	ch           byte
+	line         int
 }
 
 // New CASL2Lexer init
@@ -43,6 +44,7 @@ func (l *Lexer) NextToken() token.Token {
 			l.readChar()
 			tok.Literal = "-" + l.readNumber()
 			tok.Type = token.INT
+			tok.Line = l.line
 			return tok
 		}
 	case '#':
@@ -50,6 +52,7 @@ func (l *Lexer) NextToken() token.Token {
 			l.readChar()
 			tok.Literal = "#" + l.readHexNumber()
 			tok.Type = token.HEX
+			tok.Line = l.line
 			return tok
 		}
 	case '=':
@@ -57,6 +60,7 @@ func (l *Lexer) NextToken() token.Token {
 			l.readChar()
 			tok.Literal = "=" + l.readNumber()
 			tok.Type = token.EQINT
+			tok.Line = l.line
 			return tok
 		} else if l.peekChar() == '#' {
 			l.readChar()
@@ -64,6 +68,7 @@ func (l *Lexer) NextToken() token.Token {
 				l.readChar()
 				tok.Literal = "=#" + l.readHexNumber()
 				tok.Type = token.EQHEX
+				tok.Line = l.line
 				return tok
 			}
 		} else if l.peekChar() == '\'' {
@@ -71,13 +76,14 @@ func (l *Lexer) NextToken() token.Token {
 			l.readChar()
 			tok.Literal = "'=" + l.readCaslLetter()
 			tok.Type = token.EQSTRING
+			tok.Line = l.line
 			return tok
 		}
 	case '\'':
 		l.readChar()
 		tok.Literal = "'" + l.readCaslLetter()
 		tok.Type = token.STRING
-
+		tok.Line = l.line
 		return tok
 	case ';':
 		for l.ch != '\t' && l.ch != '\n' && l.ch != '\r' {
@@ -87,28 +93,36 @@ func (l *Lexer) NextToken() token.Token {
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
+		tok.Line = l.line
 	default:
 		if isLetter(l.ch) {
 			tok.Literal = l.readInst()
+
 			if isUppercaseLetter(tok.Literal) {
 				tok.Type = token.LookupInst(tok.Literal)
 			} else {
 				tok.Type = token.ILLEGAL
 			}
+			tok.Line = l.line
 			return tok
 		} else if isDegit(l.ch) {
 			tok.Literal = l.readNumber()
 			tok.Type = token.INT
+			tok.Line = l.line
 			return tok
 		} else {
 			tok = newToken(token.ILLEGAL, l.ch)
 		}
 	}
 	l.readChar()
+	tok.Line = l.line
 	return tok
 }
 func (l *Lexer) skipWhitespace() {
 	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+		if l.ch == '\n' {
+			l.line++
+		}
 		l.readChar()
 	}
 }
