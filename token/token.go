@@ -58,6 +58,7 @@ const (
 type Token struct {
 	Type    TokenType `json:"-"`
 	Literal string
+	Line    int
 }
 
 var caslLetter = map[byte]uint8{
