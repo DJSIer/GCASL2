@@ -11,7 +11,7 @@ import (
 
 func main() {
 	lex := lexer.New(`
-	IN A,A
+	OUT A,A
 	A DC 10
 	`)
 
