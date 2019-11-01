@@ -442,13 +442,18 @@ func (p *Parser) OUTStatment(code *opcode.Opcode) *opcode.Opcode {
 // STARTStatment `Label START` - [実行番地]
 // START プログラムの実行番地を定義
 func (p *Parser) STARTStatment(code *opcode.Opcode) *opcode.Opcode {
+
+	if p.byteAdress != 0 {
+		p.parserError(p.curToken.Line, fmt.Sprintf("STARTはプログラムの先頭になければいけません。対象 : %q", p.curToken.Literal))
+		return nil
+	}
 	if code.Label == nil {
-		p.parserError(p.peekToken.Line, fmt.Sprintf("STARTにラベルがありません。対象 : %q", p.peekToken.Literal))
+		p.parserError(p.curToken.Line, fmt.Sprintf("STARTにラベルがありません。対象 : %q", p.curToken.Literal))
 		return nil
 	}
 	sy, ok := p.symbolTable.Resolve(code.Label.Label)
 	if !ok {
-		p.parserError(p.peekToken.Line, fmt.Sprintf("STARTにラベルがありません。対象 : %q", p.peekToken.Literal))
+		p.parserError(p.curToken.Line, fmt.Sprintf("STARTにラベルがありません。対象 : %q", p.curToken.Literal))
 		return nil
 	}
 	code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Label: &sy, Token: code.Token}
