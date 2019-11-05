@@ -448,13 +448,12 @@ func (p *Parser) RPUSHStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x70, Code: 0x7001, Length: 2, Token: token.Token{Literal: "PUSH", Line: code.Token.Line}, Label: code.Label}
 	p.Excode = append(p.Excode, *code)
 	p.byteAdress += uint16(code.Length)
-	for i := 0x7002; i <= 0x7007; i++ {
+	for i := 0x7002; i <= 0x7006; i++ {
 		code = &opcode.Opcode{Op: 0x70, Code: uint16(i), Length: 2, Token: code.Token}
 		p.byteAdress += uint16(code.Length)
 		p.Excode = append(p.Excode, *code)
 	}
-	p.Excode = append(p.Excode, *code)
-	code = &opcode.Opcode{Op: 0x70, Code: 0x7008, Length: 2, Token: code.Token}
+	code = &opcode.Opcode{Op: 0x70, Code: 0x7007, Length: 2, Token: code.Token}
 	return code
 }
 
