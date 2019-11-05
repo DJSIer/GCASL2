@@ -87,6 +87,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.SVC:   p.SVCStatment,
 		token.IN:    p.INStatment,
 		token.OUT:   p.OUTStatment,
+		token.RPUSH: p.RPUSHStatment,
 	}
 	p.symbolTable = symbol.NewSymbolTable()
 	p.nextToken()
@@ -215,6 +216,8 @@ func (p *Parser) ParseProgram() ([]opcode.Opcode, error) {
 		case token.IN:
 			code = p.instSet[p.curToken.Type](code)
 		case token.OUT:
+			code = p.instSet[p.curToken.Type](code)
+		case token.RPUSH:
 			code = p.instSet[p.curToken.Type](code)
 		default:
 			p.parserError(p.curToken.Line, fmt.Sprintf("%q : 解決できません\n", p.curToken.Literal))
@@ -436,6 +439,22 @@ func (p *Parser) OUTStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.byteAdress += uint16(s.Length)
 	}
 	code = &opcode.Opcode{Op: 0x71, Code: 0x7110, Length: 1, Token: token.Token{Literal: "POP"}}
+	return code
+}
+
+// RPUSHStatment RPUSHマクロ
+func (p *Parser) RPUSHStatment(code *opcode.Opcode) *opcode.Opcode {
+
+	code = &opcode.Opcode{Op: 0x70, Code: 0x7001, Length: 2, Token: token.Token{Literal: "PUSH", Line: code.Token.Line}, Label: code.Label}
+	p.Excode = append(p.Excode, *code)
+	p.byteAdress += uint16(code.Length)
+	for i := 0x7002; i <= 0x7007; i++ {
+		code = &opcode.Opcode{Op: 0x70, Code: uint16(i), Length: 2, Token: code.Token}
+		p.byteAdress += uint16(code.Length)
+		p.Excode = append(p.Excode, *code)
+	}
+	p.Excode = append(p.Excode, *code)
+	code = &opcode.Opcode{Op: 0x70, Code: 0x7008, Length: 2, Token: code.Token}
 	return code
 }
 
