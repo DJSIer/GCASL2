@@ -11,12 +11,7 @@ import (
 
 func main() {
 	lex := lexer.New(`
-	PRG START
-	RPUSH
-	A LD GR1,GR2
-	JUMP A
-	END
-
+	IN GR0
 	`)
 
 	p := parser.New(lex)

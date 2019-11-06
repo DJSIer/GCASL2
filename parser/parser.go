@@ -88,6 +88,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.IN:    p.INStatment,
 		token.OUT:   p.OUTStatment,
 		token.RPUSH: p.RPUSHStatment,
+		token.RPOP:  p.RPOPStatment,
 	}
 	p.symbolTable = symbol.NewSymbolTable()
 	p.nextToken()
@@ -218,6 +219,8 @@ func (p *Parser) ParseProgram() ([]opcode.Opcode, error) {
 		case token.OUT:
 			code = p.instSet[p.curToken.Type](code)
 		case token.RPUSH:
+			code = p.instSet[p.curToken.Type](code)
+		case token.RPOP:
 			code = p.instSet[p.curToken.Type](code)
 		default:
 			p.parserError(p.curToken.Line, fmt.Sprintf("%q : 解決できません\n", p.curToken.Literal))
@@ -362,6 +365,7 @@ func (p *Parser) INStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x70, Code: 0x7002, Length: 2, Token: token.Token{Literal: "PUSH"}}
 	inStatmentCode = append(inStatmentCode, *code)
 	if !p.peekTokenIs(token.LABEL) {
+		p.parserError(p.peekToken.Line, fmt.Sprintf("IN %q INのあとはラベル,数値リテラルでなければいけません 対象：%q", p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
@@ -406,6 +410,7 @@ func (p *Parser) OUTStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x70, Code: 0x7002, Length: 2, Token: token.Token{Literal: "PUSH"}}
 	inStatmentCode = append(inStatmentCode, *code)
 	if !p.peekTokenIs(token.LABEL) {
+		p.parserError(p.peekToken.Line, fmt.Sprintf("OUT %q OUTのあとはラベル,数値リテラルでなければいけません 対象：%q", p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
@@ -444,7 +449,6 @@ func (p *Parser) OUTStatment(code *opcode.Opcode) *opcode.Opcode {
 
 // RPUSHStatment RPUSHマクロ
 func (p *Parser) RPUSHStatment(code *opcode.Opcode) *opcode.Opcode {
-
 	code = &opcode.Opcode{Op: 0x70, Code: 0x7001, Length: 2, Token: token.Token{Literal: "PUSH", Line: code.Token.Line}, Label: code.Label}
 	p.Excode = append(p.Excode, *code)
 	p.byteAdress += uint16(code.Length)
@@ -457,7 +461,21 @@ func (p *Parser) RPUSHStatment(code *opcode.Opcode) *opcode.Opcode {
 	return code
 }
 
-// STARTStatment `Label START` - [実行番地]
+// RPOPStatment RPOPマクロ
+func (p *Parser) RPOPStatment(code *opcode.Opcode) *opcode.Opcode {
+	code = &opcode.Opcode{Op: 0x71, Code: 0x7170, Length: 1, Token: token.Token{Literal: "PUSH", Line: code.Token.Line}, Label: code.Label}
+	p.Excode = append(p.Excode, *code)
+	p.byteAdress += uint16(code.Length)
+	for i := 0x7160; i >= 0x7110; i -= 0x10 {
+		code = &opcode.Opcode{Op: 0x71, Code: uint16(i), Length: 1, Token: code.Token}
+		p.byteAdress += uint16(code.Length)
+		p.Excode = append(p.Excode, *code)
+	}
+	code = &opcode.Opcode{Op: 0x71, Code: 0x7110, Length: 1, Token: code.Token}
+	return code
+}
+
+// STARTStatment `Label START OP` - [実行番地]
 // START プログラムの実行番地を定義
 func (p *Parser) STARTStatment(code *opcode.Opcode) *opcode.Opcode {
 
