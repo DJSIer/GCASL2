@@ -32,7 +32,7 @@ type Parser struct {
 	byteAdress  uint16
 	symbolTable *symbol.SymbolTable
 	errors      []ParserError
-	warnings    []string
+	warnings    []ParserWarning
 	instSet     map[token.TokenType]functype
 	Excode      []opcode.Opcode
 	LiteralDC   []token.Token
@@ -45,12 +45,18 @@ type ParserError struct {
 	Message string //ErrorMessage
 }
 
+// ParserWarning Parse Warning Message struct
+type ParserWarning struct {
+	Line    int    //line number
+	Message string //WarningMessage
+}
+
 // New Parser New
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{
 		l:        l,
 		errors:   []ParserError{},
-		warnings: []string{},
+		warnings: []ParserWarning{},
 		line:     1,
 	}
 	p.instSet = map[token.TokenType]functype{
@@ -119,6 +125,11 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
 func (p *Parser) Errors() []ParserError {
 	return p.errors
 }
+
+// Warnings CASL2 Parse Warning message
+func (p *Parser) Warnings() []ParserWarning {
+	return p.warnings
+}
 func (p *Parser) peekError(t token.TokenType) {
 	e := &ParserError{Line: p.line, Message: fmt.Sprintf("expected next token to be %s, got %s instead",
 		t, p.peekToken.Type)}
@@ -128,8 +139,9 @@ func (p *Parser) parserError(line int, msg string) {
 	e := &ParserError{Line: line, Message: msg}
 	p.errors = append(p.errors, *e)
 }
-func (p *Parser) parserWarning(msg string) {
-	p.warnings = append(p.warnings, msg)
+func (p *Parser) parserWarning(line int, msg string) {
+	e := &ParserWarning{Line: line, Message: msg}
+	p.warnings = append(p.warnings, *e)
 }
 
 // ParseProgram CASL2 Parse
@@ -368,6 +380,8 @@ func (p *Parser) INStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.parserError(p.peekToken.Line, fmt.Sprintf("IN %q INのあとはラベル,数値リテラルでなければいけません 対象：%q", p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
+	firstOp := p.peekToken.Literal
+
 	p.nextToken()
 	code = &opcode.Opcode{Op: 0x12, Code: 0x1210, Length: 2, Token: token.Token{Literal: "LAD"}}
 	switch p.curToken.Type {
@@ -381,6 +395,7 @@ func (p *Parser) INStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	code = &opcode.Opcode{Op: 0x12, Code: 0x1220, Length: 2, Token: token.Token{Literal: "LAD"}}
 	if !p.peekTokenIs(token.LABEL) {
+		p.parserError(p.peekToken.Line, fmt.Sprintf("IN %s,%q \n %qのあとはラベル,数値リテラルでなければいけません 対象：%q", firstOp, p.peekToken.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
@@ -413,6 +428,7 @@ func (p *Parser) OUTStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.parserError(p.peekToken.Line, fmt.Sprintf("OUT %q OUTのあとはラベル,数値リテラルでなければいけません 対象：%q", p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
+	firstOp := p.peekToken.Literal
 	p.nextToken()
 	code = &opcode.Opcode{Op: 0x12, Code: 0x1210, Length: 2, Token: token.Token{Literal: "LAD"}}
 	switch p.curToken.Type {
@@ -426,6 +442,7 @@ func (p *Parser) OUTStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	code = &opcode.Opcode{Op: 0x12, Code: 0x1220, Length: 2, Token: token.Token{Literal: "LAD"}}
 	if !p.peekTokenIs(token.LABEL) {
+		p.parserError(p.peekToken.Line, fmt.Sprintf("OUT %s,%q \n %qのあとはラベル,数値リテラルでなければいけません 対象：%q", firstOp, p.peekToken.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
 	p.nextToken()
@@ -735,12 +752,14 @@ func (p *Parser) LADStatment(code *opcode.Opcode) *opcode.Opcode {
 // ST r,adr [,x];実行アドレス ← (r)
 func (p *Parser) STStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Code: 0x1100, Op: 0x11, Length: 2, Label: code.Label, Token: code.Token}
-	if !p.expectPeek(token.REGISTER) {
-		p.parserError(p.peekToken.Line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
+
+	code, err := p.checkRegister(code)
+	if err != nil {
 		return nil
 	}
+	
 	r1 := p.curToken.Literal
-	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
+
 	if !p.expectPeek(token.COMMA) {
 		p.parserError(code.Token.Line, fmt.Sprintf("%s %s の後にカンマがありません。", code.Token.Literal, r1))
 		return nil
@@ -2153,4 +2172,16 @@ func (p *Parser) stringToAddress(code *opcode.Opcode, str string) uint16 {
 		addr, _ = token.LookupLetter(st[len(st)-1])
 	}
 	return uint16(addr)
+}
+func (p *Parser) checkRegister(code *opcode.Opcode) (*opcode.Opcode, error) {
+	if !p.expectPeek(token.REGISTER) {
+		p.parserError(p.peekToken.Line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
+		return nil, fmt.Errorf("non Register")
+	}
+	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
+	//GR0 check
+	if registerNumber[p.curToken.Literal] == 0x00 {
+		p.parserWarning(p.curToken.Line, fmt.Sprintf("%qが使用されています", p.curToken.Literal))
+	}
+	return code, nil
 }
