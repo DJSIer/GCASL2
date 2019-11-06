@@ -11,7 +11,7 @@ import (
 
 func main() {
 	lex := lexer.New(`
-	IN GR0
+	ST GR1,0
 	`)
 
 	p := parser.New(lex)
@@ -32,8 +32,10 @@ func main() {
 		fmt.Println("{\"result\":\"NG\",\"error\" :" + buf.String() + "}")
 		return
 	}
-	var buf bytes.Buffer
+	var buf, waningbuf bytes.Buffer
 	b, _ := json.Marshal(code)
 	buf.Write(b)
-	fmt.Println("{\"result\":\"OK\",\"code\" :" + buf.String() + "}")
+	warning, _ := json.Marshal(p.Warnings())
+	waningbuf.Write(warning)
+	fmt.Println("{\"result\":\"OK\",\"code\" :" + buf.String() + ",\"warning\" :" + waningbuf.String() + "}")
 }
