@@ -512,11 +512,11 @@ func (p *Parser) STARTStatment(code *opcode.Opcode) *opcode.Opcode {
 		return nil
 	}
 	if p.peekTokenIs(token.LABEL) {
-		code = &opcode.Opcode{Op: 0x64, Code: 0x6400, Length: 2, AddrLabel: p.peekToken.Literal, Label: &sy, Token: code.Token}
+		code = &opcode.Opcode{Op: 0x64, Code: 0x6400, Length: 2, AddrLabel: p.peekToken.Literal, Label: &sy, Token: token.Token{Literal: "JUMP", Line: code.Token.Line}}
 		p.nextToken()
 		return code
 	}
-	code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Label: &sy, Token: token.Token{Literal: "JUMP", Line: code.Token.Line}}
+	code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Label: &sy, Token: code.Token}
 	return code
 }
 
