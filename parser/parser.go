@@ -292,6 +292,8 @@ func (p *Parser) LiteralToMemory(code []opcode.Opcode) ([]opcode.Opcode, error) 
 			code = append(code, opcode.Opcode{Addr: uint16(addr), Length: 1, Token: token.Token{Literal: "DC"}})
 			p.symbolTable.LiteralAddressSet(l.Literal, p.byteAdress)
 			p.byteAdress++
+		case token.EQSTRING:
+
 		}
 	}
 	return code, nil
@@ -508,6 +510,11 @@ func (p *Parser) STARTStatment(code *opcode.Opcode) *opcode.Opcode {
 	if !ok {
 		p.parserError(p.curToken.Line, fmt.Sprintf("STARTにラベルがありません。対象 : %q", p.curToken.Literal))
 		return nil
+	}
+	if p.peekTokenIs(token.LABEL) {
+		code = &opcode.Opcode{Op: 0x64, Code: 0x6400, Length: 2, AddrLabel: p.peekToken.Literal, Label: &sy, Token: code.Token}
+		p.nextToken()
+		return code
 	}
 	code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Label: &sy, Token: code.Token}
 	return code
