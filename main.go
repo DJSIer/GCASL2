@@ -11,6 +11,7 @@ import (
 
 func main() {
 	lex := lexer.New(`
+	PRG START
 	IN A,A
 	A DC 1
 	`)
