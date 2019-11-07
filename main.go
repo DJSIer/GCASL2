@@ -11,8 +11,8 @@ import (
 
 func main() {
 	lex := lexer.New(`
-	SLL GR4,0
-	OR GR0,0
+	IN A,A
+	A DC 1
 	`)
 
 	p := parser.New(lex)

@@ -372,9 +372,9 @@ func (p *Parser) DSStatment(code *opcode.Opcode) *opcode.Opcode {
 //INStatment 入力装置から文字データを入力
 func (p *Parser) INStatment(code *opcode.Opcode) *opcode.Opcode {
 	var inStatmentCode []opcode.Opcode
-	code = &opcode.Opcode{Op: 0x70, Code: 0x7001, Length: 2, Token: token.Token{Literal: "PUSH"}}
+	code = &opcode.Opcode{Op: 0x70, Code: 0x7001, Length: 2, Token: token.Token{Literal: "PUSH", Line: code.Token.Line}}
 	inStatmentCode = append(inStatmentCode, *code)
-	code = &opcode.Opcode{Op: 0x70, Code: 0x7002, Length: 2, Token: token.Token{Literal: "PUSH"}}
+	code = &opcode.Opcode{Op: 0x70, Code: 0x7002, Length: 2, Token: code.Token}
 	inStatmentCode = append(inStatmentCode, *code)
 	if !p.peekTokenIs(token.LABEL) {
 		p.parserError(p.peekToken.Line, fmt.Sprintf("IN %q INのあとはラベル,数値リテラルでなければいけません 対象：%q", p.peekToken.Literal, p.peekToken.Literal))
@@ -383,7 +383,7 @@ func (p *Parser) INStatment(code *opcode.Opcode) *opcode.Opcode {
 	firstOp := p.peekToken.Literal
 
 	p.nextToken()
-	code = &opcode.Opcode{Op: 0x12, Code: 0x1210, Length: 2, Token: token.Token{Literal: "LAD"}}
+	code = &opcode.Opcode{Op: 0x12, Code: 0x1210, Length: 2, Token: token.Token{Literal: "LAD", Line: code.Token.Line}}
 	switch p.curToken.Type {
 	case token.LABEL:
 		code.AddrLabel = p.curToken.Literal
@@ -393,7 +393,7 @@ func (p *Parser) INStatment(code *opcode.Opcode) *opcode.Opcode {
 		return nil
 	}
 	p.nextToken()
-	code = &opcode.Opcode{Op: 0x12, Code: 0x1220, Length: 2, Token: token.Token{Literal: "LAD"}}
+	code = &opcode.Opcode{Op: 0x12, Code: 0x1220, Length: 2, Token: token.Token{Literal: "LAD", Line: code.Token.Line}}
 	if !p.peekTokenIs(token.LABEL) {
 		p.parserError(p.peekToken.Line, fmt.Sprintf("IN %s,%q \n %qのあとはラベル,数値リテラルでなければいけません 対象：%q", firstOp, p.peekToken.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
@@ -404,25 +404,25 @@ func (p *Parser) INStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.AddrLabel = p.curToken.Literal
 	}
 	inStatmentCode = append(inStatmentCode, *code)
-	code = &opcode.Opcode{Op: 0xF0, Code: 0xF000, Length: 2, Addr: 0x703A, Token: token.Token{Literal: "SVC"}}
+	code = &opcode.Opcode{Op: 0xF0, Code: 0xF000, Length: 2, Addr: 0x703A, Token: token.Token{Literal: "SVC", Line: code.Token.Line}}
 	inStatmentCode = append(inStatmentCode, *code)
-	code = &opcode.Opcode{Op: 0x71, Code: 0x7120, Length: 1, Token: token.Token{Literal: "POP"}}
+	code = &opcode.Opcode{Op: 0x71, Code: 0x7120, Length: 1, Token: token.Token{Literal: "POP", Line: code.Token.Line}}
 	inStatmentCode = append(inStatmentCode, *code)
 	//p.byteAdress += uint16(code.Length)
 	for _, s := range inStatmentCode {
 		p.Excode = append(p.Excode, s)
 		p.byteAdress += uint16(s.Length)
 	}
-	code = &opcode.Opcode{Op: 0x71, Code: 0x7110, Length: 1, Token: token.Token{Literal: "POP"}}
+	code = &opcode.Opcode{Op: 0x71, Code: 0x7110, Length: 1, Token: token.Token{Literal: "POP", Line: code.Token.Line}}
 	return code
 }
 
 //OUTStatment 入力装置から文字データを入力
 func (p *Parser) OUTStatment(code *opcode.Opcode) *opcode.Opcode {
 	var inStatmentCode []opcode.Opcode
-	code = &opcode.Opcode{Op: 0x70, Code: 0x7001, Length: 2, Token: token.Token{Literal: "PUSH"}}
+	code = &opcode.Opcode{Op: 0x70, Code: 0x7001, Length: 2, Token: token.Token{Literal: "PUSH", Line: code.Token.Line}}
 	inStatmentCode = append(inStatmentCode, *code)
-	code = &opcode.Opcode{Op: 0x70, Code: 0x7002, Length: 2, Token: token.Token{Literal: "PUSH"}}
+	code = &opcode.Opcode{Op: 0x70, Code: 0x7002, Length: 2, Token: code.Token}
 	inStatmentCode = append(inStatmentCode, *code)
 	if !p.peekTokenIs(token.LABEL) {
 		p.parserError(p.peekToken.Line, fmt.Sprintf("OUT %q OUTのあとはラベル,数値リテラルでなければいけません 対象：%q", p.peekToken.Literal, p.peekToken.Literal))
@@ -430,7 +430,7 @@ func (p *Parser) OUTStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	firstOp := p.peekToken.Literal
 	p.nextToken()
-	code = &opcode.Opcode{Op: 0x12, Code: 0x1210, Length: 2, Token: token.Token{Literal: "LAD"}}
+	code = &opcode.Opcode{Op: 0x12, Code: 0x1210, Length: 2, Token: token.Token{Literal: "LAD", Line: code.Token.Line}}
 	switch p.curToken.Type {
 	case token.LABEL:
 		code.AddrLabel = p.curToken.Literal
@@ -440,7 +440,7 @@ func (p *Parser) OUTStatment(code *opcode.Opcode) *opcode.Opcode {
 		return nil
 	}
 	p.nextToken()
-	code = &opcode.Opcode{Op: 0x12, Code: 0x1220, Length: 2, Token: token.Token{Literal: "LAD"}}
+	code = &opcode.Opcode{Op: 0x12, Code: 0x1220, Length: 2, Token: token.Token{Literal: "LAD", Line: code.Token.Line}}
 	if !p.peekTokenIs(token.LABEL) {
 		p.parserError(p.peekToken.Line, fmt.Sprintf("OUT %s,%q \n %qのあとはラベル,数値リテラルでなければいけません 対象：%q", firstOp, p.peekToken.Literal, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
@@ -451,16 +451,16 @@ func (p *Parser) OUTStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.AddrLabel = p.curToken.Literal
 	}
 	inStatmentCode = append(inStatmentCode, *code)
-	code = &opcode.Opcode{Op: 0xF0, Code: 0xF000, Length: 2, Addr: 0x02AB, Token: token.Token{Literal: "SVC"}}
+	code = &opcode.Opcode{Op: 0xF0, Code: 0xF000, Length: 2, Addr: 0x02AB, Token: token.Token{Literal: "SVC", Line: code.Token.Line}}
 	inStatmentCode = append(inStatmentCode, *code)
-	code = &opcode.Opcode{Op: 0x71, Code: 0x7120, Length: 1, Token: token.Token{Literal: "POP"}}
+	code = &opcode.Opcode{Op: 0x71, Code: 0x7120, Length: 1, Token: token.Token{Literal: "POP", Line: code.Token.Line}}
 	inStatmentCode = append(inStatmentCode, *code)
 	//p.byteAdress += uint16(code.Length)
 	for _, s := range inStatmentCode {
 		p.Excode = append(p.Excode, s)
 		p.byteAdress += uint16(s.Length)
 	}
-	code = &opcode.Opcode{Op: 0x71, Code: 0x7110, Length: 1, Token: token.Token{Literal: "POP"}}
+	code = &opcode.Opcode{Op: 0x71, Code: 0x7110, Length: 1, Token: token.Token{Literal: "POP", Line: code.Token.Line}}
 	return code
 }
 
