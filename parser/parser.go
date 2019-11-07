@@ -516,7 +516,7 @@ func (p *Parser) STARTStatment(code *opcode.Opcode) *opcode.Opcode {
 		p.nextToken()
 		return code
 	}
-	code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Label: &sy, Token: code.Token}
+	code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Label: &sy, Token: token.Token{Literal: "JUMP", Line: code.Token.Line}}
 	return code
 }
 
