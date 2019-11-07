@@ -11,7 +11,8 @@ import (
 
 func main() {
 	lex := lexer.New(`
-	ST GR1,0
+	SLL GR4,0
+	OR GR0,0
 	`)
 
 	p := parser.New(lex)
