@@ -482,7 +482,7 @@ func (p *Parser) RPUSHStatment(code *opcode.Opcode) *opcode.Opcode {
 
 // RPOPStatment RPOPマクロ
 func (p *Parser) RPOPStatment(code *opcode.Opcode) *opcode.Opcode {
-	code = &opcode.Opcode{Op: 0x71, Code: 0x7170, Length: 1, Token: token.Token{Literal: "PUSH", Line: code.Token.Line}, Label: code.Label}
+	code = &opcode.Opcode{Op: 0x71, Code: 0x7170, Length: 1, Token: token.Token{Literal: "POP", Line: code.Token.Line}, Label: code.Label}
 	p.Excode = append(p.Excode, *code)
 	p.byteAdress += uint16(code.Length)
 	for i := 0x7160; i >= 0x7110; i -= 0x10 {
