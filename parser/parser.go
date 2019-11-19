@@ -626,12 +626,13 @@ func (p *Parser) SVCStatment(code *opcode.Opcode) *opcode.Opcode {
 // LD r, adr [,x] 	;r  ← (実行アドレス)
 func (p *Parser) LDStatment(code *opcode.Opcode) *opcode.Opcode {
 
-	if !p.expectPeek(token.REGISTER) {
-		p.parserError(p.peekToken.Line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
+	code, err := p.checkRegister(code)
+	if err != nil {
 		return nil
 	}
+
 	r1 := p.curToken.Literal
-	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
+
 	// Next Token is ','
 	if !p.peekTokenIs(token.COMMA) {
 		p.parserError(code.Token.Line, fmt.Sprintf("%s %s の後にカンマがありません。", code.Token.Literal, r1))
@@ -701,12 +702,12 @@ func (p *Parser) LDStatment(code *opcode.Opcode) *opcode.Opcode {
 func (p *Parser) LADStatment(code *opcode.Opcode) *opcode.Opcode {
 	code = &opcode.Opcode{Op: 0x12, Code: 0x1200, Length: 2, Label: code.Label, Token: code.Token}
 
-	if !p.expectPeek(token.REGISTER) {
-		p.parserError(p.peekToken.Line, fmt.Sprintf("%s %q \n%qはレジスタではありません。", code.Token.Literal, p.peekToken.Literal, p.peekToken.Literal))
+	code, err := p.checkRegister(code)
+	if err != nil {
 		return nil
 	}
 	r1 := p.curToken.Literal
-	code.Code |= uint16(registerNumber[p.curToken.Literal]) << 4
+
 	if !p.expectPeek(token.COMMA) {
 		p.parserError(code.Token.Line, fmt.Sprintf("%s %s の後にカンマがありません。", code.Token.Literal, r1))
 		return nil

@@ -12,7 +12,7 @@ import (
 func main() {
 	lex := lexer.New(`
 	PRG START
-	IN A,A
+	LAD GR0,10
 	A DC 1
 	`)
 
