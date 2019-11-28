@@ -440,7 +440,7 @@ func (p *Parser) OUTStatment(code *opcode.Opcode) *opcode.Opcode {
 	}
 	inStatmentCode = append(inStatmentCode, *code)
 	if !p.peekTokenIs(token.COMMA) {
-		p.parserError(p.peekToken.Line, fmt.Sprintf("IN %qのあとにカンマがありません", p.curToken.Literal))
+		p.parserError(p.peekToken.Line, fmt.Sprintf("OUT %qのあとにカンマがありません", p.curToken.Literal))
 		return nil
 	}
 	p.nextToken()
