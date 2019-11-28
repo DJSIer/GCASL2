@@ -11,7 +11,10 @@ import (
 
 func main() {
 	lex := lexer.New(`
-	RPOP
+	PRG START
+	IN A
+	LD GR1, A
+	A	DC 1
 	`)
 
 	p := parser.New(lex)
