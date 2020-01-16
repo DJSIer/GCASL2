@@ -95,6 +95,7 @@ func New(l *lexer.Lexer) *Parser {
 		token.OUT:   p.OUTStatment,
 		token.RPUSH: p.RPUSHStatment,
 		token.RPOP:  p.RPOPStatment,
+		token.NOP:   p.NOPStatment,
 	}
 	p.symbolTable = symbol.NewSymbolTable()
 	p.nextToken()
@@ -234,6 +235,8 @@ func (p *Parser) ParseProgram() ([]opcode.Opcode, error) {
 			code = p.instSet[p.curToken.Type](code)
 		case token.RPOP:
 			code = p.instSet[p.curToken.Type](code)
+		case token.NOP:
+			code = p.instSet[p.curToken.Type](code)
 		default:
 			p.parserError(p.curToken.Line, fmt.Sprintf("%q : 解決できません\n", p.curToken.Literal))
 			code = nil
@@ -297,6 +300,12 @@ func (p *Parser) LiteralToMemory(code []opcode.Opcode) ([]opcode.Opcode, error) 
 		}
 	}
 	return code, nil
+}
+
+// NOPStatment NOP命令
+func (p *Parser) NOPStatment(code *opcode.Opcode) *opcode.Opcode {
+	code = &opcode.Opcode{Op: 0x00, Code: 0x0000, Length: 1, Label: code.Label, Token: code.Token}
+	return code
 }
 
 //DCStatment 定数定義
