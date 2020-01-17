@@ -10,11 +10,7 @@ import (
 )
 
 func main() {
-	lex := lexer.New(`
-	LD GR1,A
-	NOP
-	NOP
-	A NOP
+	lex := lexer.New(`LD GR1,='ABC' ; 10000
 	`)
 
 	p := parser.New(lex)

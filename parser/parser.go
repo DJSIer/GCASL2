@@ -11,6 +11,7 @@ import (
 	"github.com/DJSIer/GCASL2/token"
 )
 
+// registerNumber GR0~GR7の連番定義
 var registerNumber = map[string]uint8{
 	"GR0": 0x00,
 	"GR1": 0x01,
@@ -296,7 +297,16 @@ func (p *Parser) LiteralToMemory(code []opcode.Opcode) ([]opcode.Opcode, error) 
 			p.symbolTable.LiteralAddressSet(l.Literal, p.byteAdress)
 			p.byteAdress++
 		case token.EQSTRING:
-
+			str := strings.Replace(l.Literal, "=", "", -1)
+			str = strings.Replace(str, "'", "", -1)
+			for i := 0; i < len(str); i++ {
+				addr, _ := token.LookupLetter(str[i])
+				code = append(code, opcode.Opcode{Addr: uint16(addr), Length: 1, Token: token.Token{Literal: "DC"}})
+				if i == 0 {
+					p.symbolTable.LiteralAddressSet(l.Literal, p.byteAdress)
+				}
+				p.byteAdress++
+			}
 		}
 	}
 	return code, nil
@@ -649,7 +659,7 @@ func (p *Parser) LDStatment(code *opcode.Opcode) *opcode.Opcode {
 	p.nextToken()
 	// Next Token is 'INT' or register or Label
 	if !p.peekTokenIs(token.INT) && !p.peekTokenIs(token.REGISTER) && !p.peekTokenIs(token.LABEL) &&
-		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) {
+		!p.peekTokenIs(token.HEX) && !p.peekTokenIs(token.EQINT) && !p.peekTokenIs(token.EQHEX) && !p.peekTokenIs(token.EQSTRING) {
 		p.parserError(p.peekToken.Line, fmt.Sprintf("LD %s,%q の値が数値・レジスタ・ラベルではありません。対象 : %q", r1, p.peekToken.Literal, p.peekToken.Literal))
 		return nil
 	}
@@ -682,6 +692,18 @@ func (p *Parser) LDStatment(code *opcode.Opcode) *opcode.Opcode {
 	case token.REGISTER:
 		code.Op = 0x14
 		code.Length = 1
+		code.Code |= uint16(registerNumber[p.curToken.Literal])
+	case token.EQSTRING:
+		if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
+			p.LiteralDC = append(p.LiteralDC, p.curToken)
+		}
+		code.AddrLabel = p.curToken.Literal
+		if !p.peekTokenIs(token.COMMA) {
+			code.Code |= uint16(code.Op) << 8
+			return code
+		}
+		p.nextToken()
+		p.nextToken()
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
