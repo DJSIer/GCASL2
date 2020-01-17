@@ -10,7 +10,15 @@ import (
 )
 
 func main() {
+<<<<<<< HEAD
 	lex := lexer.New(`LD GR1,='ABC' ; 10000
+=======
+	lex := lexer.New(`
+	PRG START
+	IN A
+	LD GR1, A
+	A	DC 1
+>>>>>>> 938a86418754db24d7137fe4140ef3653b2ca942
 	`)
 
 	p := parser.New(lex)
