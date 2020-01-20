@@ -171,11 +171,12 @@ jump on overflow
 return from subroutine
 - [x] `RET`
 ### SVC
-- [ ] `SVC addr`
-- [ ] `SVC addr , x`
-- [ ] `SVC LABEL`
-- [ ] `SVC LABEL, x`
+- [x] `SVC addr`
+- [x] `SVC addr , x`
+- [x] `SVC LABEL`
+- [x] `SVC LABEL, x`
 ### NOP
 no operation
 
 Start : 2019/06/06
+Release 2020/01/20
