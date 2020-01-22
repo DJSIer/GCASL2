@@ -336,6 +336,8 @@ func (p *Parser) DCStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Addr = addr
 	case token.STRING:
 		code.Addr = p.stringToAddress(code, p.peekToken.Literal)
+	case token.LABEL:
+		code.AddrLabel = p.peekToken.Literal
 	default:
 		p.parserError(p.peekToken.Line, fmt.Sprintf("数値でなければいけません。対象 : %q", p.peekToken.Literal))
 		return nil
