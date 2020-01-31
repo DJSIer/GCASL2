@@ -709,13 +709,14 @@ func (p *Parser) LDStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
-			//TODO: EQINT が0xFFFF以上の場合エラーを出す処理実装
+			//0~65535 check
 			if p.curToken.Type == token.EQINT {
 				err := p.addressLieralToInt(p.curToken.Literal)
 				if err != nil {
 					return nil
 				}
 			}
+			//TODO: EQINT が0xFFFF以上の場合エラーを出す処理実装
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -768,6 +769,13 @@ func (p *Parser) LADStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Addr = uint16(addr)
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -827,6 +835,13 @@ func (p *Parser) STStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Addr = uint16(addr)
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -899,6 +914,13 @@ func (p *Parser) ADDAStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -983,6 +1005,13 @@ func (p *Parser) SUBAStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1075,6 +1104,13 @@ func (p *Parser) ADDLStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1162,6 +1198,13 @@ func (p *Parser) SUBLStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1240,6 +1283,13 @@ func (p *Parser) ANDStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1316,6 +1366,13 @@ func (p *Parser) ORStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1390,6 +1447,13 @@ func (p *Parser) XORStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1464,6 +1528,13 @@ func (p *Parser) CPAStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1540,6 +1611,13 @@ func (p *Parser) CPLStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1606,6 +1684,13 @@ func (p *Parser) SLAStatment(code *opcode.Opcode) *opcode.Opcode {
 		}
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1672,6 +1757,13 @@ func (p *Parser) SRAStatment(code *opcode.Opcode) *opcode.Opcode {
 		}
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1737,6 +1829,13 @@ func (p *Parser) SLLStatment(code *opcode.Opcode) *opcode.Opcode {
 		}
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1802,6 +1901,13 @@ func (p *Parser) SRLStatment(code *opcode.Opcode) *opcode.Opcode {
 		}
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1857,6 +1963,13 @@ func (p *Parser) JMIStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Addr = uint16(addr)
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1902,6 +2015,13 @@ func (p *Parser) JNZStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Addr = uint16(addr)
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1947,6 +2067,13 @@ func (p *Parser) JZEStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Addr = uint16(addr)
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -1992,6 +2119,13 @@ func (p *Parser) JUMPStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Addr = uint16(addr)
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -2037,6 +2171,13 @@ func (p *Parser) JPLStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Addr = uint16(addr)
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -2082,6 +2223,13 @@ func (p *Parser) JOVStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Addr = uint16(addr)
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -2127,6 +2275,13 @@ func (p *Parser) PUSHStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Addr = uint16(addr)
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//0~65535 check
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
