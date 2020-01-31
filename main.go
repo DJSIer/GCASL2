@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	lex := lexer.New(`LD GR0,=-1000
+	lex := lexer.New(`LD GR0,=1000
 	`)
 	p := parser.New(lex)
 	code, err := p.ParseProgram()

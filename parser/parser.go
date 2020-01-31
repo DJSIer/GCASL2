@@ -709,6 +709,13 @@ func (p *Parser) LDStatment(code *opcode.Opcode) *opcode.Opcode {
 		code.Code |= uint16(registerNumber[p.curToken.Literal])
 	case token.LABEL, token.EQINT, token.EQHEX:
 		if token.LABEL != p.curToken.Type {
+			//TODO: EQINT が0xFFFF以上の場合エラーを出す処理実装
+			if p.curToken.Type == token.EQINT {
+				err := p.addressLieralToInt(p.curToken.Literal)
+				if err != nil {
+					return nil
+				}
+			}
 			if p.symbolTable.LiteralDefine(p.curToken.Literal, 0x000) {
 				p.LiteralDC = append(p.LiteralDC, p.curToken)
 			}
@@ -2215,4 +2222,14 @@ func (p *Parser) checkRegister(code *opcode.Opcode) (*opcode.Opcode, error) {
 		p.parserWarning(p.curToken.Line, fmt.Sprintf("%qが使用されています", p.curToken.Literal))
 	}
 	return code, nil
+}
+
+// addressLieralToInt =1000 or =-1000　を数値に変換する
+func (p *Parser) addressLieralToInt(eq string) error {
+	_, err := strconv.ParseInt(strings.Replace(eq, "=", "", -1), 0, 16)
+	if err != nil {
+		p.parserError(p.curToken.Line, fmt.Sprintf("数値が適正ではありません。\n 0~65535が有効な数値です。対象 : %q", p.curToken.Literal))
+		return err
+	}
+	return nil
 }
