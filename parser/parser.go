@@ -279,7 +279,7 @@ func (p *Parser) LiteralToMemory(code []opcode.Opcode) ([]opcode.Opcode, error) 
 	for _, l := range p.LiteralDC {
 		switch l.Type {
 		case token.EQINT:
-			addr, err := strconv.ParseUint(strings.Replace(l.Literal, "=", "", -1), 0, 16)
+			addr, err := strconv.ParseInt(strings.Replace(l.Literal, "=", "", -1), 0, 16)
 			if err != nil {
 				p.parserError(0, fmt.Sprintf("%q : 解決できません\n", l.Literal))
 				return code, fmt.Errorf("リテラル解決失敗")

@@ -62,6 +62,14 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Type = token.EQINT
 			tok.Line = l.line
 			return tok
+		} else if l.peekChar() == '-' {
+			//TODO: LD GR1,=-1000 の-1000の部分の実装が下手なので直す
+			l.readChar()
+			l.readChar()
+			tok.Literal = "=-" + l.readNumber()
+			tok.Type = token.EQINT
+			tok.Line = l.line
+			return tok
 		} else if l.peekChar() == '#' {
 			l.readChar()
 			if isHex(l.peekChar()) {

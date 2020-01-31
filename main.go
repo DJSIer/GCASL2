@@ -10,10 +10,8 @@ import (
 )
 
 func main() {
-	lex := lexer.New(`NOP NOP NOP NOP DC A
-	A LD GR1, GR2
+	lex := lexer.New(`LD GR0,=-1000
 	`)
-
 	p := parser.New(lex)
 	code, err := p.ParseProgram()
 	if err != nil {
